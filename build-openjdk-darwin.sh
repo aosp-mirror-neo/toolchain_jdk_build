@@ -32,19 +32,15 @@ freetype=freetype-2.8
 
 build=${OUT}/build/macosx-x86_64-normal-server-release
 images=${build}/images
-for i in $(find ${images} -type f \( -name "*.jar" -o -name "*.zip" -o -name "*.sym" \) ); do
-    ${TOP}/prebuilts/build-tools/darwin-x86/bin/ziptime $i
-done
+
+sanitize_zips ${images}
 
 if [ -n "${DIST_DIR}" ]; then
     mkdir -p ${DIST_DIR}
     DIST=$(cd ${DIST_DIR} && pwd)
-    (cd ${images}/j2re-image && zip -X -r ${DIST}/jre.zip *)
-    (cd ${images}/j2sdk-image && zip -X -r ${DIST}/jdk.zip *)
-    (cd ${images}/j2re-bundle && zip -X -r ${DIST}/jre-bundle.zip *)
-    (cd ${images}/j2sdk-bundle && zip -X -r ${DIST}/jdk-bundle.zip *)
-    for i in ${DIST_DIR}/*.zip; do
-        ${TOP}/prebuilts/build-tools/darwin-x86/bin/ziptime $i
-    done
+    soong_zip ${DIST}/jre.zip ${images}/j2re-image
+    soong_zip ${DIST}/jdk.zip ${images}/j2sdk-image
+    soong_zip ${DIST}/jre-bundle.zip ${images}/j2re-bundle
+    soong_zip ${DIST}/jdk-bundle.zip ${images}/j2sdk-bundle
     cp -f ${build}/config.* ${DIST_DIR}/
 fi

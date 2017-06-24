@@ -77,18 +77,14 @@ function unpack_deb() {
 
 build=${OUT}/build/linux-x86_64-normal-server-release
 images=${build}/images
-for i in $(find ${images} -type f \( -name "*.jar" -o -name "*.zip" -o -name "*.sym" \) ); do
-    ${TOP}/prebuilts/build-tools/linux-x86/bin/ziptime $i
-done
+
+sanitize_zips ${images}
 
 if [ -n "${DIST_DIR}" ]; then
     mkdir -p ${DIST_DIR}
     DIST=$(cd ${DIST_DIR} && pwd)
-    (cd ${images}/j2re-image && zip -X -r ${DIST}/jre.zip *)
-    (cd ${images}/j2sdk-image && zip -X -r ${DIST}/jdk.zip *)
-    for i in ${DIST_DIR}/*.zip; do
-        ${TOP}/prebuilts/build-tools/linux-x86/bin/ziptime $i
-    done
+    soong_zip ${DIST}/jre.zip ${images}/j2re-image
+    soong_zip ${DIST}/jdk.zip ${images}/j2sdk-image
     cp -f ${build}/config.* ${DIST_DIR}/
 fi
 
