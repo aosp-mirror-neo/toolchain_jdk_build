@@ -18,7 +18,33 @@ export PATH=${clang_dir}/bin:${PATH}
   tar jxf ${TOP}/toolchain/jdk/deps/src/${freetype}.tar.bz2
 )
 
-GLOBAL_FLAGS="-isysroot ${sysroot}"
+GLOBAL_FLAGS=(
+  -isysroot ${sysroot}
+  -Wno-conversion
+  -Wno-deprecated-declarations
+  -Wno-expansion-to-defined
+  -Wno-format
+  -Wno-implicit-function-declaration
+  -Wno-incompatible-pointer-types
+  -Wno-logical-op-parentheses
+  -Wno-macro-redefined
+  -Wno-missing-field-initializers
+  -Wno-missing-method-return-type
+  -Wno-parentheses
+  -Wno-parentheses-equality
+  -Wno-self-assign
+  -Wno-shift-negative-value
+  -Wno-sign-compare
+  -Wno-sign-conversion
+  -Wno-switch
+  -Wno-tautological-compare
+  -Wno-tautological-undefined-compare
+  -Wno-unused-command-line-argument
+  -Wno-unused-function
+  -Wno-unused-parameter
+)
+GLOBAL_FLAGS=${GLOBAL_FLAGS[@]}
+
 CC=clang
 CXX=clang++
 
