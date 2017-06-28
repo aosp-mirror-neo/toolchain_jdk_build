@@ -81,11 +81,16 @@ function sanitize_zips() {
 }
 
 function move_debuginfo() {
-  for i in $(find ${1} -name "*.debuginfo"); do
+  for i in $(find ${1} -name "*.debuginfo" -o -name "*.dSYM"); do
     mkdir -p $(dirname ${i/${1}/${2}})
     mv ${i} ${i/${1}/${2}}
   done
 }
+
+function delete_debuginfo() {
+    rm -rf $(find ${1} -name "*.debuginfo" -o -name "*.dSYM")
+}
+
 
 function build_openjdk_images() {
   (
@@ -104,7 +109,11 @@ function build_openjdk_images() {
     fi
 
     move_debuginfo images/j2sdk-image images/j2sdk-image-debuginfo
-    rm $(find images/j2re-image -name "*.debuginfo")
+    delete_debuginfo images/j2re-image
+    if [ -d images/j2sdk-bundle ]; then
+      delete_debuginfo images/j2sdk-bundle
+      delete_debuginfo images/j2re-bundle
+    fi
   )
 
   sanitize_zips $OUT/images
