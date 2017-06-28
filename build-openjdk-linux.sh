@@ -48,6 +48,7 @@ configure_openjdk \
   --with-alsa-lib=${sysroot}/usr/lib/x86_64-linux-gnu/ \
   --with-alsa-include=${sysroot}/usr/include \
   --with-stdc++lib=static \
+  --disable-freetype-bundling \
   AR=x86_64-linux-ar \
   NM=x86_64-linux-nm \
   OBJCOPY=x86_64-linux-objcopy \

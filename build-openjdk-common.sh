@@ -80,6 +80,13 @@ function sanitize_zips() {
   done
 }
 
+function move_debuginfo() {
+  for i in $(find ${1} -name "*.debuginfo"); do
+    mkdir -p $(dirname ${i/${1}/${2}})
+    mv ${i} ${i/${1}/${2}}
+  done
+}
+
 function build_openjdk_images() {
   (
     cd $OUT
@@ -95,6 +102,9 @@ function build_openjdk_images() {
       rm -rf images/j2sdk-bundle/*/Contents/Home/sample/
       rm -rf images/j2sdk-bundle/*/Contents/Home/man/
     fi
+
+    move_debuginfo images/j2sdk-image images/j2sdk-image-debuginfo
+    rm $(find images/j2re-image -name "*.debuginfo")
   )
 
   sanitize_zips $OUT/images
@@ -104,6 +114,7 @@ function build_openjdk_images() {
     DIST=$(cd ${DIST_DIR} && pwd)
     soong_zip ${DIST}/jre.zip ${OUT}/images/j2re-image
     soong_zip ${DIST}/jdk.zip ${OUT}/images/j2sdk-image
+    soong_zip ${DIST}/jdk-debuginfo.zip ${OUT}/images/j2sdk-image-debuginfo
     if [ -d "${OUT}/images/j2re-bundle" ]; then
       soong_zip ${DIST}/jre-bundle.zip ${OUT}/images/j2re-bundle
       soong_zip ${DIST}/jdk-bundle.zip ${OUT}/images/j2sdk-bundle
