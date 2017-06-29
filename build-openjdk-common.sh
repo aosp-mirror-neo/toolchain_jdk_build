@@ -117,7 +117,9 @@ function build_openjdk_images() {
   )
 
   sanitize_zips $OUT/images
+}
 
+function dist_openjdk() {
   if [ -n "${DIST_DIR}" ]; then
     mkdir -p ${DIST_DIR}
     DIST=$(cd ${DIST_DIR} && pwd)

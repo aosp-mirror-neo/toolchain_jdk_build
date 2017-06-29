@@ -66,3 +66,10 @@ configure_openjdk \
   --with-freetype=${OUT}/${freetype}
 
 build_openjdk_images COMPILER_WARNINGS_FATAL=false
+
+# Rewrite absolute references to libfreetype.6.dylib to rpath-relative references
+for lib in $(find ${OUT}/images -name "libfontmanager.dylib"); do
+  install_name_tool -change /usr/local/lib/libfreetype.6.dylib @rpath/libfreetype.dylib.6 $lib
+done
+
+dist_openjdk

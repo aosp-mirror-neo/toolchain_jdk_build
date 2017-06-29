@@ -57,3 +57,5 @@ configure_openjdk \
   STRIP=x86_64-linux-strip \
 
 build_openjdk_images
+
+dist_openjdk
