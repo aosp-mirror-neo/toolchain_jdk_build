@@ -8,7 +8,7 @@ if [ "${sdk_version}" != "10.9" -a "${sdk_version}" != "10.10" ]; then
     exit 1
 fi
 sysroot=$(xcrun --show-sdk-path)
-clang_dir=${TOP}/prebuilts/clang/host/darwin-x86/clang-stable
+clang_dir=${TOP}/prebuilts/clang/host/darwin-x86/clang-4053586
 freetype=freetype-2.8
 
 export PATH=${clang_dir}/bin:${PATH}
