@@ -55,6 +55,10 @@ configure_openjdk \
   OBJDUMP=x86_64-linux-objdump \
   READELF=x86_64-linux-readelf \
   STRIP=x86_64-linux-strip \
+  BUILD_AR="$(which x86_64-linux-ar)" \
+  BUILD_NM="$(which x86_64-linux-nm)" \
+  BUILD_OBJCOPY="$(which x86_64-linux-objcopy)" \
+  BUILD_STRIP="$(which x86_64-linux-strip)" \
 
 build_openjdk_images
 

@@ -1,8 +1,16 @@
 set -e
 set -x
 
-JDK_UPDATE_VERSION=152
-JDK_BUILD_NUMBER=1
+if [ "$1" = "--version=9" ]; then
+  JDK_SRC=toolchain/jdk
+  JDK_VERSION=9
+  JDK_UPDATE_VERSION=181
+else
+  JDK_SRC=external/jetbrains
+  JDK_VERSION=8u
+  JDK_UPDATE_VERSION=152
+  JDK_BUILD_NUMBER=1
+fi
 
 if [ -z "${OUT_DIR}" ]; then
   echo "OUT_DIR must be set"
@@ -12,7 +20,6 @@ fi
 mkdir -p ${OUT_DIR}
 OUT=$(cd ${OUT_DIR} && pwd)
 TOP=$(cd $(dirname $0)/../../.. && pwd)
-JDK_SRC=${TOP}/external/jetbrains
 
 case $(uname) in
   Linux)
@@ -32,23 +39,50 @@ esac
 
 BUILD_TOOLS=${TOP}/prebuilts/build-tools/${PREBUILT_DIR}/bin
 
-ln -sf ${JDK_SRC}/jdk8u/* ${OUT}/
-for i in $(cd ${JDK_SRC}; ls -d jdk8u_*); do
-  rm -f ${OUT}/${i/jdk8u_/}
-  ln -sf ${JDK_SRC}/${i} ${OUT}/${i/jdk8u_/}
+ln -sf ${TOP}/${JDK_SRC}/jdk${JDK_VERSION}/* ${OUT}/
+for i in $(cd ${TOP}/${JDK_SRC}; ls -d jdk${JDK_VERSION}_*); do
+  rm -f ${OUT}/${i/jdk${JDK_VERSION}_/}
+  ln -sf ${TOP}/${JDK_SRC}/${i} ${OUT}/${i/jdk${JDK_VERSION}_/}
 done
 
 function configure_openjdk() {
+  if [ "$JDK_VERSION" = "9" ]; then
+    configure_openjdk9 "$@"
+  else
+    configure_openjdk8 "$@"
+  fi
+}
+
+function configure_openjdk8() {
+  GLOBAL_FLAGS_IN_CC=" ${GLOBAL_FLAGS}"
+
+  configure_openjdk_common \
+    --host=$TRIPLE \
+    --disable-zip-debug-info \
+    --with-milestone=android \
+    --with-update-version=${JDK_UPDATE_VERSION} \
+    --with-build-number=${JDK_BUILD_NUMBER} \
+    --with-user-release-suffix=${BUILD_NUMBER} \
+    "$@"
+}
+
+function configure_openjdk9() {
+  GLOBAL_FLAGS_IN_CC=""
+
+  configure_openjdk_common \
+    --openjdk-target=$TRIPLE \
+    --with-native-debug-symbols=external \
+    --with-version-pre="" \
+    --with-version-build=${JDK_UPDATE_VERSION} \
+    --with-version-opt=android${BUILD_NUMBER} \
+    "$@"
+}
+
+function configure_openjdk_common() {
   (
     cd $OUT
     bash configure \
-      --host=$TRIPLE \
-      --disable-zip-debug-info \
       --with-boot-jdk=${TOP}/prebuilts/studio/jdk/${JAVA_PREBUILT_SUBDIR} \
-      --with-milestone=android \
-      --with-update-version=${JDK_UPDATE_VERSION} \
-      --with-build-number=${JDK_BUILD_NUMBER} \
-      --with-user-release-suffix=${BUILD_NUMBER} \
       --with-extra-cflags="$GLOBAL_FLAGS" \
       --with-extra-cxxflags="$GLOBAL_FLAGS" \
       LDFLAGS="${GLOBAL_FLAGS}" \
@@ -58,12 +92,12 @@ function configure_openjdk() {
       X_CFLAGS="${GLOBAL_FLAGS}" \
       CCXXFLAGS_JDK="${GLOBAL_FLAGS}" \
       LDFLAGS_JDK="${GLOBAL_FLAGS}" \
-      CC="${CC} ${GLOBAL_FLAGS}" \
-      CXX="${CXX} ${GLOBAL_FLAGS}" \
-      LD="${CC} ${GLOBAL_FLAGS}" \
-      BUILD_CC="$(which ${CC}) ${GLOBAL_FLAGS}" \
-      BUILD_CXX="$(which ${CXX}) ${GLOBAL_FLAGS}" \
-      BUILD_LD="$(which ${CC}) ${GLOBAL_FLAGS}" \
+      CC="${CC}${GLOBAL_FLAGS_IN_CC}" \
+      CXX="${CXX}${GLOBAL_FLAGS_IN_CC}" \
+      LD="${CC}${GLOBAL_FLAGS_IN_CC}" \
+      BUILD_CC="$(which ${CC})${GLOBAL_FLAGS_IN_CC}" \
+      BUILD_CXX="$(which ${CXX})${GLOBAL_FLAGS_IN_CC}" \
+      BUILD_LD="$(which ${CC})${GLOBAL_FLAGS_IN_CC}" \
       ZIP="/usr/bin/zip -X" \
       "$@"
   )
@@ -95,24 +129,41 @@ function delete_debuginfo() {
 function build_openjdk_images() {
   (
     cd $OUT
-    make images VERBOSE= ${@}
+
+    if [ "${JDK_VERSION}" = "9" ]; then
+      verbose="LOG=debug"
+    else
+      verbose="VERBOSE="
+    fi
+
+    make images ${verbose} ${@}
     rm -rf images/
     mkdir images
     cp -r build/${OPENJDK_IMAGES_SUBDIR}/images/* images/
-    rm -rf images/j2sdk-image/demo/
-    rm -rf images/j2sdk-image/sample/
-    rm -rf images/j2sdk-image/man/
-    if [ -d images/j2sdk-bundle ]; then
-      rm -rf images/j2sdk-bundle/*/Contents/Home/demo/
-      rm -rf images/j2sdk-bundle/*/Contents/Home/sample/
-      rm -rf images/j2sdk-bundle/*/Contents/Home/man/
+
+    if [ -d images/j2sdk-image ]; then
+      mv images/j2sdk-image images/jdk
+      mv images/j2re-image images/jre
+      if [-d images/j2sdk-bundle ]; then
+	mv images/j2sdk-bundle images/jdk-bundle
+	mv images/j2re-bundle images/jre-bundle
+      fi
     fi
 
-    move_debuginfo images/j2sdk-image images/j2sdk-image-debuginfo
-    delete_debuginfo images/j2re-image
-    if [ -d images/j2sdk-bundle ]; then
-      delete_debuginfo images/j2sdk-bundle
-      delete_debuginfo images/j2re-bundle
+    rm -rf images/jdk/demo/
+    rm -rf images/jdk/samples/
+    rm -rf images/jdk/man/
+    if [ -d images/jdk-bundle ]; then
+      rm -rf images/jdk-bundle/*/Contents/Home/demo/
+      rm -rf images/jdk-bundle/*/Contents/Home/sample/
+      rm -rf images/jdk-bundle/*/Contents/Home/man/
+    fi
+
+    move_debuginfo images/jdk images/jdk-debuginfo
+    delete_debuginfo images/jre
+    if [ -d images/jdk-bundle ]; then
+      delete_debuginfo images/jdk-bundle
+      delete_debuginfo images/jre-bundle
     fi
   )
 
@@ -123,13 +174,13 @@ function dist_openjdk() {
   if [ -n "${DIST_DIR}" ]; then
     mkdir -p ${DIST_DIR}
     DIST=$(cd ${DIST_DIR} && pwd)
-    soong_zip ${DIST}/jre.zip ${OUT}/images/j2re-image
-    soong_zip ${DIST}/jdk.zip ${OUT}/images/j2sdk-image
-    soong_zip ${DIST}/jdk-debuginfo.zip ${OUT}/images/j2sdk-image-debuginfo
+    soong_zip ${DIST}/jre.zip ${OUT}/images/jre
+    soong_zip ${DIST}/jdk.zip ${OUT}/images/jdk
+    soong_zip ${DIST}/jdk-debuginfo.zip ${OUT}/images/jdk-debuginfo
     if [ -d "${OUT}/images/j2re-bundle" ]; then
-      soong_zip ${DIST}/jre-bundle.zip ${OUT}/images/j2re-bundle
-      soong_zip ${DIST}/jdk-bundle.zip ${OUT}/images/j2sdk-bundle
+      soong_zip ${DIST}/jre-bundle.zip ${OUT}/images/jre-bundle
+      soong_zip ${DIST}/jdk-bundle.zip ${OUT}/images/jdk-bundle
     fi
-    cp -f ${OUT}/build/${OPENJDK_IMAGES_SUBDIR}/config.* ${DIST_DIR}/
+    cp -f ${OUT}/build/${OPENJDK_IMAGES_SUBDIR}/config*.log ${DIST_DIR}/
   fi
 }
