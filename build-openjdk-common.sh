@@ -75,6 +75,9 @@ function configure_openjdk9() {
     --with-version-pre="" \
     --with-version-build=${JDK_UPDATE_VERSION} \
     --with-version-opt=android${BUILD_NUMBER} \
+    --with-sysroot=${SYSROOT} \
+    BUILD_SYSROOT_CFLAGS="${GLOBAL_FLAGS}" \
+    BUILD_SYSROOT_LDFLAGS="${GLOBAL_FLAGS}" \
     "$@"
 }
 

@@ -2,7 +2,7 @@
 
 source $(dirname $0)/build-openjdk-common.sh
 
-sysroot=${OUT}/sysroot
+SYSROOT=${OUT}/sysroot
 gcc_dir=${TOP}/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.15-4.8/bin
 
 function unpack_deb() {
@@ -34,19 +34,19 @@ export PATH=${gcc_dir}:${PATH} \
   done
 )
 
-GLOBAL_FLAGS="--sysroot=${sysroot}"
+GLOBAL_FLAGS="--sysroot=${SYSROOT}"
 CC=x86_64-linux-gcc
 CXX=x86_64-linux-g++
 
 
 configure_openjdk \
-  --x-libraries=${sysroot}/usr/lib/x86_64-linux-gnu/ \
-  --x-includes=${sysroot}/usr/include \
-  --with-cups-include=${sysroot}/usr/include \
-  --with-freetype-lib=${sysroot}/usr/lib/x86_64-linux-gnu/ \
-  --with-freetype-include=${sysroot}/usr/include/freetype2 \
-  --with-alsa-lib=${sysroot}/usr/lib/x86_64-linux-gnu/ \
-  --with-alsa-include=${sysroot}/usr/include \
+  --x-libraries=${SYSROOT}/usr/lib/x86_64-linux-gnu/ \
+  --x-includes=${SYSROOT}/usr/include \
+  --with-cups-include=${SYSROOT}/usr/include \
+  --with-freetype-lib=${SYSROOT}/usr/lib/x86_64-linux-gnu/ \
+  --with-freetype-include=${SYSROOT}/usr/include/freetype2 \
+  --with-alsa-lib=${SYSROOT}/usr/lib/x86_64-linux-gnu/ \
+  --with-alsa-include=${SYSROOT}/usr/include \
   --with-stdc++lib=static \
   --disable-freetype-bundling \
   AR=x86_64-linux-ar \

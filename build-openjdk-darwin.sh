@@ -7,7 +7,6 @@ if [ "${sdk_version}" != "10.9" -a "${sdk_version}" != "10.10" ]; then
     echo "Xcode sdk version 10.9 or 10.10 is required"
     exit 1
 fi
-sysroot=$(xcrun --show-sdk-path)
 clang_dir=${TOP}/prebuilts/clang/host/darwin-x86/clang-4053586
 freetype=freetype-2.8
 
@@ -18,8 +17,11 @@ export PATH=${clang_dir}/bin:${PATH}
   tar jxf ${TOP}/toolchain/jdk/deps/src/${freetype}.tar.bz2
 )
 
+SYSROOT=$(xcrun --show-sdk-path)
 GLOBAL_FLAGS=(
-  -isysroot ${sysroot}
+  -isysroot ${SYSROOT}
+  --sysroot ${SYSROOT}
+  -F ${SYSROOT}/System/Library/Frameworks/JavaVM.framework/Frameworks
   -Wno-conversion
   -Wno-deprecated-declarations
   -Wno-expansion-to-defined
@@ -42,6 +44,8 @@ GLOBAL_FLAGS=(
   -Wno-unused-command-line-argument
   -Wno-unused-function
   -Wno-unused-parameter
+
+  -Wno-undefined-var-template
 )
 GLOBAL_FLAGS=${GLOBAL_FLAGS[@]}
 
@@ -65,10 +69,15 @@ export MACOSX_DEPLOYMENT_TARGET=10.8
 configure_openjdk \
   --with-freetype=${OUT}/${freetype}
 
-build_openjdk_images COMPILER_WARNINGS_FATAL=false
+if [ "$JDK_VERSION" = "8u" ]; then
+    extra_build_flags=COMPILER_WARNINGS_FATAL=false
+fi
+
+build_openjdk_images ${extra_build_flags}
 
 # Rewrite absolute references to libfreetype.6.dylib to rpath-relative references
-for lib in $(find ${OUT}/images -name "libfontmanager.dylib"); do
+for lib in $(find ${OUT}/images/jdk ${OUT}/images/jre ${OUT}/images/jdk-bundle ${OUT}/images/jre-bundle \
+    -name "libfontmanager.dylib"); do
   install_name_tool -change /usr/local/lib/libfreetype.6.dylib @rpath/libfreetype.dylib.6 $lib
 done
 
