@@ -46,6 +46,9 @@ GLOBAL_FLAGS=(
   -Wno-unused-parameter
 
   -Wno-undefined-var-template
+
+  # Catches issues where the MacOSX clang backend inserts undefined instructions
+  -Werror=delete-non-virtual-dtor
 )
 GLOBAL_FLAGS=${GLOBAL_FLAGS[@]}
 
