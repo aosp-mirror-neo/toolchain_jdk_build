@@ -7,9 +7,9 @@
 
 # Use hg-git 0.8.0, the last tag that produces identical git SHAs to
 # https://github.com/jetbrains/jdk8u
-hg clone git://github.com/schacon/hg-git.git -u 0.8.0
+hg clone http://bitbucket.org/durin42/hg-git -u 0.8.0
 
-jdk9=http://hg.openjdk.java.net/jdk9/dev
+jdk9=http://hg.openjdk.java.net/jdk9u
 
 mkdir -p hg
 hg clone --pull ${jdk9} hg/jdk9

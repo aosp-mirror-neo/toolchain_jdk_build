@@ -57,6 +57,8 @@ export MACOSX_DEPLOYMENT_TARGET=10.8
 (
   cd ${OUT}/${freetype}
   bash configure \
+    --with-png=no \
+    --with-harfbuzz=no \
     CC=clang \
     CC_BUILD=clang \
     LD=clang \
