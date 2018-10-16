@@ -7,7 +7,7 @@ if [ "${sdk_version}" != "10.9" -a "${sdk_version}" != "10.10" ]; then
     echo "Xcode sdk version 10.9 or 10.10 is required"
     exit 1
 fi
-clang_dir=${TOP}/prebuilts/clang/host/darwin-x86/clang-4053586
+clang_dir=${TOP}/prebuilts/clang/host/darwin-x86/clang-r339409b
 freetype=freetype-2.8
 
 export PATH=${clang_dir}/bin:${PATH}
@@ -44,6 +44,9 @@ GLOBAL_FLAGS=(
   -Wno-unused-command-line-argument
   -Wno-unused-function
   -Wno-unused-parameter
+
+  -Wno-deprecated-register
+  -Wno-c++11-narrowing
 
   -Wno-undefined-var-template
 )
