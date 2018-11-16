@@ -31,7 +31,7 @@ case $(uname) in
   Darwin)
     PREBUILT_DIR=darwin-x86
     TRIPLE=x86_64-apple-darwin
-    JAVA_PREBUILT_SUBDIR=mac/Contents/Home
+    JAVA_PREBUILT_SUBDIR=darwin-x86
     OPENJDK_IMAGES_SUBDIR=macosx-x86_64-normal-server-release
     ;;
   *) echo "unknown OS:" $(uname) && exit 1;;
