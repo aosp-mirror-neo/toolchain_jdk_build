@@ -25,7 +25,7 @@ case $(uname) in
   Linux)
     PREBUILT_DIR=linux-x86
     TRIPLE=x86_64-linux-gnu
-    JAVA_PREBUILT_SUBDIR=linux
+    JAVA_PREBUILT_SUBDIR=linux-x86
     OPENJDK_IMAGES_SUBDIR=linux-x86_64-normal-server-release
     ;;
   Darwin)
@@ -85,7 +85,7 @@ function configure_openjdk_common() {
   (
     cd $OUT
     bash configure \
-      --with-boot-jdk=${TOP}/prebuilts/studio/jdk/${JAVA_PREBUILT_SUBDIR} \
+      --with-boot-jdk=${TOP}/prebuilts/jdk/jdk8/${JAVA_PREBUILT_SUBDIR} \
       --with-extra-cflags="$GLOBAL_FLAGS" \
       --with-extra-cxxflags="$GLOBAL_FLAGS" \
       LDFLAGS="${GLOBAL_FLAGS}" \
