@@ -4,12 +4,17 @@ set -x
 if [ "$1" = "--version=9" ]; then
   JDK_SRC=toolchain/jdk
   JDK_VERSION=9
+  JDK_MILESTONE=android
   JDK_UPDATE_VERSION=181
+  JDK_USER_RELEASE_SUFFIX=${BUILD_NUMBER}
 else
   JDK_SRC=external/jetbrains
-  JDK_VERSION=8u
-  JDK_UPDATE_VERSION=152
-  JDK_BUILD_NUMBER=1
+  jdk_build_txt=external/jetbrains/jdk8u_jdk/build.txt
+  JDK_VERSION="$(sed 's/u.*$//' ${jdk_build_txt})u"
+  JDK_MILESTONE=release
+  JDK_UPDATE_VERSION="$(sed 's/^.*u//;s/-b.*$//' ${jdk_build_txt})"
+  JDK_USER_RELEASE_SUFFIX="$(sed 's/^.*-b//;s/\..*$//' ${jdk_build_txt})"
+  JDK_BUILD_NUMBER="b$(sed 's/^.*\.//' ${jdk_build_txt})-${BUILD_NUMBER}"
 fi
 
 if [ -z "${OUT_DIR}" ]; then
@@ -59,10 +64,10 @@ function configure_openjdk8() {
   configure_openjdk_common \
     --host=$TRIPLE \
     --disable-zip-debug-info \
-    --with-milestone=android \
+    --with-milestone=${JDK_MILESTONE} \
     --with-update-version=${JDK_UPDATE_VERSION} \
     --with-build-number=${JDK_BUILD_NUMBER} \
-    --with-user-release-suffix=${BUILD_NUMBER} \
+    --with-user-release-suffix=${JDK_USER_RELEASE_SUFFIX} \
     "$@"
 }
 
