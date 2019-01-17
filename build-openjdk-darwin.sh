@@ -34,6 +34,7 @@ GLOBAL_FLAGS=(
   -Wno-missing-method-return-type
   -Wno-parentheses
   -Wno-parentheses-equality
+  -Wno-reserved-user-defined-literal
   -Wno-self-assign
   -Wno-shift-negative-value
   -Wno-sign-compare
@@ -46,7 +47,6 @@ GLOBAL_FLAGS=(
   -Wno-unused-parameter
 
   -Wno-deprecated-register
-  -Wno-c++11
   -Wno-c++11-narrowing
 
   -Wno-undefined-var-template
