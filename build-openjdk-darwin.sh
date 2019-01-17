@@ -46,6 +46,7 @@ GLOBAL_FLAGS=(
   -Wno-unused-parameter
 
   -Wno-deprecated-register
+  -Wno-c++11
   -Wno-c++11-narrowing
 
   -Wno-undefined-var-template
