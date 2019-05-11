@@ -100,9 +100,9 @@ function configure_openjdk_common() {
       X_CFLAGS="${GLOBAL_FLAGS}" \
       CCXXFLAGS_JDK="${GLOBAL_FLAGS}" \
       LDFLAGS_JDK="${GLOBAL_FLAGS}" \
-      CC="${CC}${GLOBAL_FLAGS_IN_CC}" \
-      CXX="${CXX}${GLOBAL_FLAGS_IN_CC}" \
-      LD="${CC}${GLOBAL_FLAGS_IN_CC}" \
+      CC="${CC}" \
+      CXX="${CXX}" \
+      LD="${CC}" \
       BUILD_CC="$(which ${CC})${GLOBAL_FLAGS_IN_CC}" \
       BUILD_CXX="$(which ${CXX})${GLOBAL_FLAGS_IN_CC}" \
       BUILD_LD="$(which ${CC})${GLOBAL_FLAGS_IN_CC}" \
