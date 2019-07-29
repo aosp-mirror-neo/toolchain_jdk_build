@@ -7,6 +7,7 @@ pkgs=$(echo \
   libc6-dev \
   libcups2 \
   libcups2-dev \
+  libfontconfig1-dev \
   libfreetype6 \
   libfreetype6-dev \
   libgcc-4.8-dev \
