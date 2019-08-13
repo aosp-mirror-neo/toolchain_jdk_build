@@ -82,7 +82,7 @@ fi
 build_openjdk_images ${extra_build_flags}
 
 # Rewrite absolute references to libfreetype.6.dylib to rpath-relative references
-for lib in $(find ${OUT}/images/jdk ${OUT}/images/jre ${OUT}/images/j2sdk-bundle ${OUT}/images/j2re-bundle \
+for lib in $(find ${OUT}/images/jdk ${OUT}/images/jre ${OUT}/images/jdk-bundle ${OUT}/images/jre-bundle \
     -name "libfontmanager.dylib"); do
   install_name_tool -change /usr/local/lib/libfreetype.6.dylib @rpath/libfreetype.dylib.6 $lib
 done
