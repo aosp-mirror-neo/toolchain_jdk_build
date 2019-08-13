@@ -152,10 +152,11 @@ function build_openjdk_images() {
     if [ -d images/j2sdk-image ]; then
       mv images/j2sdk-image images/jdk
       mv images/j2re-image images/jre
-      if [-d images/j2sdk-bundle ]; then
-	mv images/j2sdk-bundle images/jdk-bundle
-	mv images/j2re-bundle images/jre-bundle
-      fi
+    fi
+
+    if [ -d images/j2sdk-bundle ]; then
+      mv images/j2sdk-bundle images/jdk-bundle
+      mv images/j2re-bundle images/jre-bundle
     fi
 
     rm -rf images/jdk/demo/
@@ -185,7 +186,7 @@ function dist_openjdk() {
     soong_zip ${DIST}/jre.zip ${OUT}/images/jre
     soong_zip ${DIST}/jdk.zip ${OUT}/images/jdk
     soong_zip ${DIST}/jdk-debuginfo.zip ${OUT}/images/jdk-debuginfo
-    if [ -d "${OUT}/images/j2re-bundle" ]; then
+    if [ -d "${OUT}/images/jre-bundle" ]; then
       soong_zip ${DIST}/jre-bundle.zip ${OUT}/images/jre-bundle
       soong_zip ${DIST}/jdk-bundle.zip ${OUT}/images/jdk-bundle
     fi
