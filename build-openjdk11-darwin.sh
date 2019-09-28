@@ -37,6 +37,17 @@ function make_target_dir() {
   mkdir -p "$1" && realpath "$1"
 }
 
+# Installs autoconf into specified directory. The second argument is working directory.
+function install_autoconf() {
+  local -r workdir=$(make_target_dir "$2")
+  local -r installdir=$(make_target_dir "$1")
+  tar -C "$workdir" -xzf toolchain/jdk/deps/src/autoconf-2.69.tar.gz
+  (cd "$workdir"/autoconf-2.69 &&
+     ./configure --prefix="$installdir" "${quiet:+--quiet}" &&
+     make "${quiet:+-s}" install
+  )
+}
+
 # Options
 while getopts 'qd:' opt; do
   case $opt in
@@ -57,13 +68,17 @@ declare -r sysroot=$(xcrun --show-sdk-path)
 declare -r build_dir="$out_path/build"
 declare -r top=$(realpath "$(dirname "$0")/../../..")
 declare -r clang_bin="$top/prebuilts/clang/host/darwin-x86/clang-r353983d/bin"
+declare -r autoconf_dir=$(make_target_dir "$out_path/autoconf")
+
+# Darwin lacks autoconf, install it for this build.
+install_autoconf "$autoconf_dir" "$out_path"
 
 # Configure
 mkdir -p "$build_dir"
 [[ -n "${quiet:-}" ]] || set -x
-# TODO(asmundak): JDK9 build its own version of the freetype. Not sure why it is needed.
-(cd "$build_dir" && 
-   bash +x "$top/toolchain/jdk/jdk11/configure" \
+# TODO(asmundak): JDK9 builds its own version of the freetype. Not sure why it is needed.
+(cd "$build_dir" &&
+   PATH="$autoconf_dir/bin":$PATH bash +x "$top/toolchain/jdk/jdk11/configure" \
      "${quiet:+--quiet}" \
      --with-boot-jdk="$top/prebuilts/jdk/jdk9/darwin-x86" \
      --disable-full-docs \
@@ -90,8 +105,8 @@ make -C "$build_dir" LOG=${make_log_level:-debug} ${quiet:+-s} images
 # Dist
 rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,build.log,configure.log}
 # TODO(asmundak): JDK9 also created jdk-bundle.zip -- what is it for?
-(cd "$build_dir/images/jdk" && 
-  zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . -x 'demo/*' -x'man/*' -x'*.dSYM' && 
+(cd "$build_dir/images/jdk" &&
+  zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . -x 'demo/*' -x'man/*' -x'*.dSYM' &&
   zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.dSYM/*'
 )
 cp "$build_dir"/build.log "$dist_dir"

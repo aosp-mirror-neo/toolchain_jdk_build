@@ -55,6 +55,7 @@ apt download $pkgs
 mkdir -p src
 (cd src && apt source --download-only $pkgs)
 (cd src && curl --location -O http://download.savannah.gnu.org/releases/freetype/freetype-2.8.tar.bz2)
+(cd src && curl --location -O http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz)
 
 function deb_to_license() {
   local data=$(ar t $1 | grep data.tar)
