@@ -43,8 +43,8 @@ function install_autoconf() {
   local -r installdir=$(make_target_dir "$1")
   tar -C "$workdir" -xzf toolchain/jdk/deps/src/autoconf-2.69.tar.gz
   (cd "$workdir"/autoconf-2.69 &&
-     ./configure --prefix="$installdir" "${quiet:+--quiet}" &&
-     make "${quiet:+-s}" install
+     ./configure --prefix="$installdir" ${quiet:+--quiet} &&
+     make ${quiet:+-s} install
   )
 }
 
@@ -79,7 +79,7 @@ mkdir -p "$build_dir"
 # TODO(asmundak): JDK9 builds its own version of the freetype. Not sure why it is needed.
 (cd "$build_dir" &&
    PATH="$autoconf_dir/bin":$PATH bash +x "$top/toolchain/jdk/jdk11/configure" \
-     "${quiet:+--quiet}" \
+     ${quiet:+--quiet} \
      --with-boot-jdk="$top/prebuilts/jdk/jdk9/darwin-x86" \
      --disable-full-docs \
      --disable-warnings-as-errors \
