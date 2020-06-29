@@ -2,9 +2,9 @@
 #
 # Builds JDK11, optionally creating distribution artifacts for it.
 # Usage:
-#   build_openjdk11-linux.sh [-q] [-d <dist_dir>] build_dir
-# The JDK is built in <build_dir>.
-# With -d, creates the following artifacts in <dist_dir>:
+#   build_openjdk11-linux.sh [-q]
+# The JDK is built in OUT_DIR (or "out" if unset).
+# If DIST_DIR is set, the following artifacts are created there:
 #   jdk.zip              archive of the JDK distribution
 #   jdk-debuginfo.zip    .debuginfo files for JDK's shared libraries
 #   configure.log
@@ -17,9 +17,9 @@ declare -r prog="${0##*/}"
 function usage() {
   cat <<EOF
 Usage:
-    $prog [-q] [-d <dist_dir>] <build_dir>
-JDK is built in <build_dir>.
-With -d, creates the artifacts in <dist_dir>.
+    $prog [-q]
+The JDK is built in OUT_DIR (or "out" if unset).
+If DIST_DIR is set, artifacts are created there.
 With -q, runs with minimum noise.
 EOF
   exit 1
@@ -30,17 +30,20 @@ function make_target_dir() {
   mkdir -p "$1" && realpath "$1"
 }
 
+if [[ -n "${DIST_DIR:-}" ]]; then
+  dist_dir="$(make_target_dir "${DIST_DIR}")"
+fi
+
 while getopts 'qd:' opt; do
   case $opt in
-    d) dist_dir=$(make_target_dir $OPTARG) ;;
     q) quiet=t ;;
     *) usage ;;
   esac
 done
 shift $(($OPTIND-1))
-(($#==1)) || usage
+(($#==0)) || usage
 
-declare -r out_path=$(make_target_dir "$1")
+declare -r out_path=$(make_target_dir "${OUT_DIR:-"out"}")
 declare -r sysroot="$out_path/sysroot"
 declare -r build_dir="$out_path/build"
 declare -r top=$(realpath "$(dirname "$0")/../../..")
