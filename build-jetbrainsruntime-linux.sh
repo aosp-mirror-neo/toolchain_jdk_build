@@ -100,6 +100,7 @@ mkdir -p "$build_dir"
      --with-stdc++lib=static \
      --with-toolchain-type=clang \
      --with-tools-dir="$clang_bin" \
+     --without-version-pre \
      --with-version-opt="$(sed 's/^.*-//' "${top}/external/jetbrains/JetBrainsRuntime/build.txt")-${BUILD_NUMBER}" \
      --with-zlib=bundled \
      --x-libraries="$sysroot/usr/lib/x86_64-linux-gnu" \
