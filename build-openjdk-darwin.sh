@@ -7,7 +7,7 @@ if [ "${sdk_version}" != "10.9" -a "${sdk_version}" != "10.10" ]; then
     echo "Xcode sdk version 10.9 or 10.10 is required"
     exit 1
 fi
-clang_dir=${TOP}/prebuilts/clang/host/darwin-x86/clang-r353983c
+clang_dir=${TOP}/prebuilts/clang/host/darwin-x86/clang-r383902c
 freetype=freetype-2.8
 
 export PATH=${clang_dir}/bin:${PATH}
