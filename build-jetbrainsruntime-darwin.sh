@@ -90,6 +90,7 @@ mkdir -p "$build_dir"
      --with-toolchain-type=clang \
      --with-tools-dir="$clang_bin" \
      --without-version-pre \
+     --with-vendor-name="JetBrains s.r.o." \
      --with-version-opt="$(sed 's/^.*-//' "${top}/external/jetbrains/JetBrainsRuntime/build.txt")-${BUILD_NUMBER}" \
      --with-zlib=bundled \
      AR=llvm-ar NM=llvm-nm OBJDUMP=llvm-objdump STRIP=llvm-strip
