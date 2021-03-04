@@ -73,7 +73,7 @@ install_autoconf "$autoconf_dir" "$out_path"
 mkdir -p "$build_dir"
 [[ -n "${quiet:-}" ]] || set -x
 (cd "$build_dir" &&
-   bash +x "$top/external/jetbrains/JetBrainsRuntime/configure" \
+    PATH="$autoconf_dir/bin":$PATH bash +x "$top/external/jetbrains/JetBrainsRuntime/configure" \
      "${quiet:+--quiet}" \
      --disable-full-docs \
      --disable-warnings-as-errors \
@@ -89,6 +89,7 @@ mkdir -p "$build_dir"
      --with-vendor-name="JetBrains s.r.o." \
      --with-version-opt="$(sed 's/^.*-//' "${top}/external/jetbrains/JetBrainsRuntime/build.txt")-${BUILD_NUMBER}" \
      --with-zlib=bundled \
+     --with-jvm-features="shenandoahgc" \
      AR=llvm-ar NM=llvm-nm OBJDUMP=llvm-objdump STRIP=llvm-strip
 )
 
@@ -100,8 +101,8 @@ make -C "$build_dir" LOG=${make_log_level:-debug} ${quiet:+-s} images
 # Dist
 rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
 (cd "$build_dir/images/jdk" &&
-  zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . -x 'demo/*' -x'man/*' -x'*.debuginfo' &&
-  zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.debuginfo'
+  zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . -x 'demo/*' -x'man/*' -x'*.dSYM' &&
+  zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.dSYM'
 )
 cp "$build_dir"/build.log "$dist_dir"
 cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
