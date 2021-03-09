@@ -39,7 +39,7 @@ function make_target_dir() {
 function install_autoconf() {
   local -r workdir=$(make_target_dir "$2")
   local -r installdir=$(make_target_dir "$1")
-  tar -C "$workdir" -xzf toolchain/jdk/deps/src/autoconf-2.69.tar.gz
+  tar -C "$workdir" -xzf "$top/toolchain/jdk/deps/src/autoconf-2.69.tar.gz"
   (cd "$workdir"/autoconf-2.69 &&
      ./configure --prefix="$installdir" ${quiet:+--quiet} &&
      make ${quiet:+-s} install
