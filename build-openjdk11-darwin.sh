@@ -59,10 +59,6 @@ done
 shift $(($OPTIND-1))
 (($#==1)) || usage
 
-declare -r sdk_version=$(xcrun --show-sdk-version)
-[[ "${sdk_version}" == "10.9" || "${sdk_version}" == "10.10" ]] || \
-    { echo "Xcode sdk version 10.9 or 10.10 is required"; exit 1; }
-
 declare -r out_path=$(make_target_dir "$1")
 declare -r sysroot=$(xcrun --show-sdk-path)
 declare -r build_dir="$out_path/build"

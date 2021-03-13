@@ -2,11 +2,6 @@
 
 source $(dirname $0)/build-openjdk-common.sh
 
-sdk_version=$(xcrun --show-sdk-version)
-if [ "${sdk_version}" != "10.9" -a "${sdk_version}" != "10.10" ]; then
-    echo "Xcode sdk version 10.9 or 10.10 is required"
-    exit 1
-fi
 clang_dir=${TOP}/prebuilts/clang/host/darwin-x86/clang-r399163b
 freetype=freetype-2.8
 
