@@ -70,6 +70,9 @@ declare -r top=$(realpath "$(dirname "$0")/../../..")
 declare -r clang_bin="$top/prebuilts/clang/host/darwin-x86/clang-r399163b/bin"
 declare -r autoconf_dir=$(make_target_dir "$out_path/autoconf")
 
+# So that configure finds tools like dsymutil in ${clang_bin} instead of /usr/bin
+export PATH=${clang_bin}:$PATH
+
 # Darwin lacks autoconf, install it for this build.
 install_autoconf "$autoconf_dir" "$out_path"
 
