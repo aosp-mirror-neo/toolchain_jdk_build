@@ -45,6 +45,12 @@ GLOBAL_FLAGS=(
   -Wno-c++11-narrowing
 
   -Wno-undefined-var-template
+
+  -Wno-sizeof-array-div
+  -Wno-string-compare
+  -Wno-mismatched-parameter-types
+  -Wno-unguarded-availability-new
+  -Wno-void-pointer-to-int-cast
 )
 GLOBAL_FLAGS=${GLOBAL_FLAGS[@]}
 
