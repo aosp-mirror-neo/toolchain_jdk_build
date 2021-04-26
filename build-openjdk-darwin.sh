@@ -2,7 +2,7 @@
 
 source $(dirname $0)/build-openjdk-common.sh
 
-clang_dir=${TOP}/prebuilts/clang/host/darwin-x86/clang-r399163b
+clang_dir=${TOP}/prebuilts/clang/host/darwin-x86/clang-r416183b
 freetype=freetype-2.8
 
 export PATH=${clang_dir}/bin:${PATH}
@@ -51,6 +51,8 @@ GLOBAL_FLAGS=(
   -Wno-mismatched-parameter-types
   -Wno-unguarded-availability-new
   -Wno-void-pointer-to-int-cast
+
+  -fno-delete-null-pointer-checks
 )
 GLOBAL_FLAGS=${GLOBAL_FLAGS[@]}
 

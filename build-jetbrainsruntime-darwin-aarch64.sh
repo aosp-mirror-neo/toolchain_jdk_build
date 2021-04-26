@@ -138,7 +138,8 @@ install_autoconf "$autoconf_dir" "$out_path"
      --with-extra-cflags="-arch arm64 ${jnf_flags_param}" \
      --with-extra-cxxflags="-arch arm64 ${jnf_flags_param} " \
      --with-extra-ldflags="-arch arm64 ${jnf_flags_param}" \
-     --with-jvm-features="shenandoahgc"
+     --with-jvm-features="shenandoahgc" \
+     --with-extra-cflags="-fno-delete-null-pointer-checks"
 )
 
 # Make

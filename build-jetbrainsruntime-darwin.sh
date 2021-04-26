@@ -63,7 +63,7 @@ declare -r out_path=$(make_target_dir "${OUT_DIR:-"out"}")
 declare -r sysroot=$(xcrun --show-sdk-path)
 declare -r build_dir="$out_path/build"
 declare -r top=$(realpath "$(dirname "$0")/../../..")
-declare -r clang_bin="$top/prebuilts/clang/host/darwin-x86/clang-r353983c/bin"
+declare -r clang_bin="$top/prebuilts/clang/host/darwin-x86/clang-r416183b/bin"
 declare -r autoconf_dir=$(make_target_dir "$out_path/autoconf")
 
 # Darwin lacks autoconf, install it for this build.
@@ -90,6 +90,7 @@ mkdir -p "$build_dir"
      --with-version-opt="$(sed 's/^.*-//' "${top}/external/jetbrains/JetBrainsRuntime/build.txt")-${BUILD_NUMBER}" \
      --with-zlib=bundled \
      --with-jvm-features="shenandoahgc" \
+     --with-extra-cflags="-fno-delete-null-pointer-checks" \
      AR=llvm-ar NM=llvm-nm OBJDUMP=llvm-objdump STRIP=llvm-strip
 )
 
