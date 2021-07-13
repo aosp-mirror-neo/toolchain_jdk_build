@@ -44,7 +44,7 @@ declare -r out_path=$(make_target_dir "$1")
 declare -r sysroot="$out_path/sysroot"
 declare -r build_dir="$out_path/build"
 declare -r top=$(realpath "$(dirname "$0")/../../..")
-declare -r clang_bin="$top/prebuilts/clang/host/linux-x86/clang-r399163b/bin"
+declare -r clang_bin="$top/prebuilts/clang/host/linux-x86/clang-r416183b/bin"
 
 # "Installs" given Debian packages into specified directory.
 function unpack_dependencies() {
@@ -103,6 +103,8 @@ mkdir -p "$build_dir"
      --with-zlib=bundled \
      --x-libraries="$sysroot/usr/lib/x86_64-linux-gnu" \
      --x-includes="$sysroot/usr/include" \
+     --with-extra-cflags="-fno-delete-null-pointer-checks" \
+     --with-extra-ldflags="-fuse-ld=lld" \
      AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
 )
 
