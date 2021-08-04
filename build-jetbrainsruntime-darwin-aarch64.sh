@@ -95,7 +95,7 @@ declare -r autoconf_dir=$(make_target_dir "$out_path/autoconf")
 # so we build a 'normal' x64 jdk first, and use it as a bootstrap for aarch64
 (
   echo "Building darwin-x86_64 jdk"
-  OUT_DIR="$out_path/jdk_x86_64" BUILD_NUMBER="$build_number" bash +x $(dirname $0)/build-jetbrainsruntime-darwin.sh "-q" "-x"
+  OUT_DIR="$out_path/jdk_x86_64" BUILD_NUMBER="$build_number" bash +x $(dirname $0)/build-jetbrainsruntime-darwin.sh "-q"
 )
 declare -r boot_jdk=$(realpath "$out_path/jdk_x86_64/build/images/jdk")
 declare -r boot_jdk_version=$($boot_jdk/bin/java -version 2>&1 | head -1 | cut -d'"' -f2)
@@ -135,11 +135,10 @@ install_autoconf "$autoconf_dir" "$out_path"
      --with-vendor-name="JetBrains s.r.o." \
      --with-version-opt="$(sed 's/^.*-//' "${top}/external/jetbrains/JetBrainsRuntime/build.txt")-${build_number}" \
      --openjdk-target=aarch64-apple-darwin \
-     --with-extra-cflags="-arch arm64 ${jnf_flags_param}" \
+     --with-extra-cflags="-arch arm64 ${jnf_flags_param} -fno-delete-null-pointer-checks" \
      --with-extra-cxxflags="-arch arm64 ${jnf_flags_param} " \
      --with-extra-ldflags="-arch arm64 ${jnf_flags_param}" \
-     --with-jvm-features="shenandoahgc" \
-     --with-extra-cflags="-fno-delete-null-pointer-checks"
+     --with-jvm-features="shenandoahgc"
 )
 
 # Make
