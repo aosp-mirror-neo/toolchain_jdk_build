@@ -2,7 +2,7 @@
 #
 # Builds JDK11 for aarch64, optionally creating distribution artifacts for it.
 # Usage:
-#   build-jetbrainsruntime-darwin.sh [-q] [-d <dist_dir>] [-o <out_dir>] [-f <jnf_dir>] -b <build_number>
+#   build-jetbrainsruntime-darwin.sh [-q] [-d <dist_dir>] [-o <out_dir>] -b <build_number>
 # The JDK is built in OUT_DIR (or "out" if unset).
 # If DIST_DIR is set, the following artifacts are created there:
 #   jdk.zip              archive of the JDK distribution
@@ -47,18 +47,16 @@ Usage:
 The JDK is built in <out_dir> (or "out" if unset).
 If <dist_dir> is set, artifacts are created there.
 Specify JBR build number with <build_number>
-Use <jnf_dir> to override JavaNativeFundation location
 With -q, runs with minimum noise.
 EOF
   exit 1
 }
 
-while getopts 'qb:d:o:f:' opt; do
+while getopts 'qb:d:o:' opt; do
   case $opt in
     b) build_number=$OPTARG ;;
     o) out_dir_option=$OPTARG;;
     d) dist_dir=$(make_target_dir $OPTARG) ;;
-    f) jnf_dir=$OPTARG;;
     q) quiet=t ;;
     *) usage ;;
   esac
@@ -88,29 +86,18 @@ declare -r sysroot=$(xcrun --show-sdk-path)
 declare -r build_dir="$out_path/build"
 declare -r top=$(realpath "$(dirname "$0")/../../..")
 declare -r autoconf_dir=$(make_target_dir "$out_path/autoconf")
-
-
-## TODO change to JDK11 prebuilt, when it is checked in
-# When this script was created there was only jdk9 prebuilt available, but to cross-compile boot jdk need to be 10 or 11
-# so we build a 'normal' x64 jdk first, and use it as a bootstrap for aarch64
-(
-  echo "Building darwin-x86_64 jdk"
-  OUT_DIR="$out_path/jdk_x86_64" BUILD_NUMBER="$build_number" bash +x $(dirname $0)/build-jetbrainsruntime-darwin.sh "-q"
-)
-declare -r boot_jdk=$(realpath "$out_path/jdk_x86_64/build/images/jdk")
+declare -r boot_jdk="$top/prebuilts/jdk/studio/jdk11/mac/Contents/Home"
 declare -r boot_jdk_version=$($boot_jdk/bin/java -version 2>&1 | head -1 | cut -d'"' -f2)
+
 
 if [ $(ver $boot_jdk_version) -ge $(ver 12) ] || [ $(ver $boot_jdk_version) -lt $(ver 10) ]; then
     echo "Boot JDK version must be 10 or 11"
     exit 1
 fi
 
-if [ "${jnf_dir:-}" ]; then
-    declare -r jnf_flags_param="-F$(realpath $jnf_dir) "
-else
-    declare -r jnf_flags_param=""
-fi
-
+#TODO(June 2022) - check if JNF is still required to build M1 JDK
+declare -r jnf_dir="$top/prebuilts/jdk/studio/jdk11/mac-arm64/Contents/Home/Frameworks"
+declare -r jnf_flags_param="-F$(realpath $jnf_dir) "
 
 # Darwin lacks autoconf, install it for this build.
 install_autoconf "$autoconf_dir" "$out_path"
@@ -149,8 +136,9 @@ make -C "$build_dir" LOG=${make_log_level:-debug} ${quiet:+-s} images
 [[ -n "${dist_dir:-}" ]] || exit 0
 
 rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
+declare -r bundle_dir=$(find $build_dir/images/jdk-bundle/ -type d -depth 1 -name 'jdk-*.jdk')
+
 (
-  declare -r bundle_dir=$(find $build_dir/images/jdk-bundle/ -type d -depth 1 -name 'jdk-*.jdk')
   cd "$build_dir/images/jdk-bundle"
 
   # Bundle JavaNativeFoundation
@@ -161,21 +149,41 @@ rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configur
   # Rewrite absolute references to rpath-relative one
   install_name_tool -change @rpath/JavaNativeFoundation.framework/Versions/A/JavaNativeFoundation @loader_path/../Frameworks/JavaNativeFoundation.framework/JavaNativeFoundation ${bundle_dir}/Contents/Home/lib/libawt.dylib
 
-  zip -9rDy${quiet:+q} "$dist_dir"/jdk-bundle.zip . -x 'demo/*' -x'man/*' -x'*.dSYM'
-  zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.dSYM'
+  zip -9rDy${quiet:+q} "$dist_dir"/jdk-bundle.zip . -x'*.dSYM/*' -x'*/man/*' -x'*/demo/*'
+  zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.dSYM/*'
+
+  echo $'\n\n===================================='
+  echo "JDK Bundle $dist_dir/jdk-bundle.zip"
+  echo "Debug Symbols $dist_dir/jdk-debuginfo.zip"
+  echo $'====================================\n\n'
 )
 cp "$build_dir"/build.log "$dist_dir"
 cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
 
-# Use jlink from Boot JDK and newly built one is for different CPU architecture
-"${boot_jdk}/bin/jlink" \
-  --no-header-files \
-  --no-man-pages \
-  --compress=2 \
-  --module-path="${build_dir}/images/jdk/jmods" \
-  --add-modules java.base,java.compiler,java.datatransfer,java.desktop,java.instrument,java.logging,java.management,java.management.rmi,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.se,java.security.jgss,java.security.sasl,java.smartcardio,java.sql,java.sql.rowset,java.transaction.xa,java.xml,java.xml.crypto,jdk.accessibility,jdk.aot,jdk.attach,jdk.charsets,jdk.compiler,jdk.crypto.cryptoki,jdk.crypto.ec,jdk.dynalink,jdk.hotspot.agent,jdk.httpserver,jdk.internal.ed,jdk.internal.jvmstat,jdk.internal.le,jdk.internal.vm.ci,jdk.internal.vm.compiler,jdk.internal.vm.compiler.management,jdk.jartool,jdk.javadoc,jdk.jdi,jdk.jdwp.agent,jdk.jfr,jdk.jlink,jdk.jsobject,jdk.localedata,jdk.management,jdk.management.agent,jdk.management.jfr,jdk.naming.dns,jdk.naming.rmi,jdk.net,jdk.pack,jdk.scripting.nashorn,jdk.scripting.nashorn.shell,jdk.sctp,jdk.security.auth,jdk.security.jgss,jdk.unsupported,jdk.xml.dom,jdk.zipfs \
-  --output "${build_dir}/java-runtime"
 
-# Rewrite absolute references to rpath-relative one
-install_name_tool -change @rpath/JavaNativeFoundation.framework/Versions/A/JavaNativeFoundation @loader_path/../Frameworks/JavaNativeFoundation.framework/JavaNativeFoundation ${build_dir}/java-runtime/lib/libawt.dylib
-(cd "${build_dir}/java-runtime" && zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" .)
+#Assemble JDK-runtime
+(
+  mkdir -p  "${build_dir}/java-runtime"
+  cd  "${build_dir}/java-runtime"
+
+  # Use jlink from Boot JDK as we are cross-compiling
+  "${boot_jdk}/bin/jlink" \
+    --no-header-files \
+    --no-man-pages \
+    --compress=2 \
+    --module-path="${build_dir}/images/jdk/jmods" \
+    --add-modules $(xargs < ${top}/toolchain/jdk/build/jdk11-modules.list | sed s/" "/,/g) \
+    --output "${build_dir}/java-runtime/Contents/Home"
+
+  # Rewrite absolute references to rpath-relative one
+  install_name_tool -change @rpath/JavaNativeFoundation.framework/Versions/A/JavaNativeFoundation @loader_path/../Frameworks/JavaNativeFoundation.framework/JavaNativeFoundation Contents/Home/lib/libawt.dylib
+
+  ditto ${bundle_dir}/Contents/MacOS ./Contents/MacOS
+  ditto ${bundle_dir}/Contents/Info.plist ./Contents/Info.plist
+
+  zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" . -x'*.dSYM/*' -x'*/man/*' -x'*/demo/*'
+
+  echo $'\n\n===================================='
+  echo "JDK Runtime $dist_dir/jdk-runtime.zip"
+  echo $'====================================\n\n'
+)
