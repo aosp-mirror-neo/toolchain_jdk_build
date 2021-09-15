@@ -144,6 +144,10 @@ declare -r bundle_dir=$(find $build_dir/images/jdk-bundle/ -type d -depth 1 -nam
   # Bundle JavaNativeFoundation
   if [ "${jnf_dir:-}" ]; then
    ditto "$(realpath $jnf_dir)" ${bundle_dir}/Contents/Home/Frameworks
+
+   # b/194917144 temoporary fix
+   # TODO(2022-09-01) check if this still required
+   find ${bundle_dir}/Contents/Home/Frameworks -name '*JavaNativeFoundation.tbd' -exec rm -rf {} \;
   fi
 
   # Rewrite absolute references to rpath-relative one
