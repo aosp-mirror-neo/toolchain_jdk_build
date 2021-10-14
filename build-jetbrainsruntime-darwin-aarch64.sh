@@ -52,11 +52,20 @@ EOF
   exit 1
 }
 
+function print_build_debug_info(){
+  echo "Available Disk space ...."
+   df -h
+}
+
+
+
+
+
 while getopts 'qb:d:o:' opt; do
   case $opt in
     b) build_number=$OPTARG ;;
     o) out_dir_option=$OPTARG;;
-    d) dist_dir=$(make_target_dir $OPTARG) ;;
+    d) dist_dir_option=$OPTARG;;
     q) quiet=t ;;
     *) usage ;;
   esac
@@ -64,12 +73,21 @@ done
 shift $(($OPTIND-1))
 (($#==0)) || usage
 
+# use ENV values or defaults if command line parameters are not set
 if [ -z "${out_dir_option:-}" ]; then
-    out_dir_option="out"
+    out_dir_option=${OUT_DIR:-"out"}
 fi
 
 if [ -z "${build_number:-}" ]; then
-    usage
+    build_number=${BUILD_NUMBER:-"dev"}
+fi
+
+if [ -z "${dist_dir_option:-}" ]; then
+    dist_dir_option=${DIST_DIR:-}
+fi
+
+if [[ -n "${dist_dir_option:-}" ]]; then
+  dist_dir="$(make_target_dir "${dist_dir_option}")"
 fi
 
 declare -r sdk_version=$(xcrun --show-sdk-version)
@@ -89,6 +107,18 @@ declare -r autoconf_dir=$(make_target_dir "$out_path/autoconf")
 declare -r boot_jdk="$top/prebuilts/jdk/studio/jdk11/mac/Contents/Home"
 declare -r boot_jdk_version=$($boot_jdk/bin/java -version 2>&1 | head -1 | cut -d'"' -f2)
 
+echo "Building Aarch64 JDK......."
+echo "out_path=${out_path:-}"
+echo "dist_dir=${dist_dir:-}"
+echo "build_number=${build_number:-}"
+echo "sysroot=${sysroot:-}"
+echo "top=${top:-}"
+echo "sdk_version=${sdk_version:-}"
+echo "autoconf_dir=${autoconf_dir:-}"
+echo "boot_jdk=${boot_jdk:-}"
+echo "build_dir=${build_dir:-}"
+echo "boot_jdk_version=${boot_jdk_version:-}"
+print_build_debug_info
 
 if [ $(ver $boot_jdk_version) -ge $(ver 12) ] || [ $(ver $boot_jdk_version) -lt $(ver 10) ]; then
     echo "Boot JDK version must be 10 or 11"
@@ -128,12 +158,21 @@ install_autoconf "$autoconf_dir" "$out_path"
      --with-jvm-features="shenandoahgc"
 )
 
+echo "Configure done"
+print_build_debug_info
+echo "Making images ...."
+
 # Make
 declare -r make_log_level=${quiet:+warn}
 make -C "$build_dir" LOG=${make_log_level:-debug} ${quiet:+-s} images
 
+echo "Images done"
+print_build_debug_info
+
 # Dist
 [[ -n "${dist_dir:-}" ]] || exit 0
+
+echo "Making Dist ...."
 
 rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
 declare -r bundle_dir=$(find $build_dir/images/jdk-bundle/ -type d -depth 1 -name 'jdk-*.jdk')
@@ -164,6 +203,8 @@ declare -r bundle_dir=$(find $build_dir/images/jdk-bundle/ -type d -depth 1 -nam
 cp "$build_dir"/build.log "$dist_dir"
 cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
 
+echo "Dist done"
+print_build_debug_info
 
 #Assemble JDK-runtime
 (
@@ -191,3 +232,5 @@ cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
   echo "JDK Runtime $dist_dir/jdk-runtime.zip"
   echo $'====================================\n\n'
 )
+
+print_build_debug_info
