@@ -86,7 +86,7 @@ mkdir -p "$build_dir"
      --disable-warnings-as-errors \
      --with-alsa-include="$sysroot/usr/include" \
      --with-alsa-lib="$sysroot/usr/lib/x86_64-linux-gnu" \
-     --with-boot-jdk="$top/prebuilts/jdk/jdk9/linux-x86" \
+     --with-boot-jdk="$top/prebuilts/jdk/jdk11/linux-x86" \
      --with-cups-include="$sysroot/usr/include" \
      --with-sysroot="$sysroot"\
      --with-freetype=system \

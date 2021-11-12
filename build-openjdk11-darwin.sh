@@ -79,7 +79,7 @@ mkdir -p "$build_dir"
 (cd "$build_dir" &&
    PATH="$autoconf_dir/bin":$PATH bash +x "$top/toolchain/jdk/jdk11/configure" \
      ${quiet:+--quiet} \
-     --with-boot-jdk="$top/prebuilts/jdk/jdk9/darwin-x86" \
+     --with-boot-jdk="$top/prebuilts/jdk/jdk11/darwin-x86" \
      --disable-full-docs \
      --disable-warnings-as-errors \
      --with-sysroot="$sysroot"\
