@@ -52,15 +52,6 @@ EOF
   exit 1
 }
 
-function print_build_debug_info(){
-  echo "Available Disk space ...."
-   df -h
-}
-
-
-
-
-
 while getopts 'qb:d:o:' opt; do
   case $opt in
     b) build_number=$OPTARG ;;
@@ -118,7 +109,6 @@ echo "autoconf_dir=${autoconf_dir:-}"
 echo "boot_jdk=${boot_jdk:-}"
 echo "build_dir=${build_dir:-}"
 echo "boot_jdk_version=${boot_jdk_version:-}"
-print_build_debug_info
 
 if [ $(ver $boot_jdk_version) -ge $(ver 12) ] || [ $(ver $boot_jdk_version) -lt $(ver 10) ]; then
     echo "Boot JDK version must be 10 or 11"
@@ -159,7 +149,6 @@ install_autoconf "$autoconf_dir" "$out_path"
 )
 
 echo "Configure done"
-print_build_debug_info
 echo "Making images ...."
 
 # Make
@@ -167,7 +156,6 @@ declare -r make_log_level=${quiet:+warn}
 make -C "$build_dir" LOG=${make_log_level:-debug} ${quiet:+-s} images
 
 echo "Images done"
-print_build_debug_info
 
 # Dist
 [[ -n "${dist_dir:-}" ]] || exit 0
@@ -204,7 +192,6 @@ cp "$build_dir"/build.log "$dist_dir"
 cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
 
 echo "Dist done"
-print_build_debug_info
 
 #Assemble JDK-runtime
 (
@@ -232,5 +219,3 @@ print_build_debug_info
   echo "JDK Runtime $dist_dir/jdk-runtime.zip"
   echo $'====================================\n\n'
 )
-
-print_build_debug_info

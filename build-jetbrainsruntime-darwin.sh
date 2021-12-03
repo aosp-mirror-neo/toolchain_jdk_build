@@ -25,12 +25,6 @@ EOF
   exit 1
 }
 
-function print_build_debug_info(){
-  echo "Available Disk space ...."
-   df -h
-}
-
-
 # Alas, Darwin does not have realpath.
 realpath() {
     cd $1 && pwd
@@ -81,7 +75,6 @@ echo "top=${top:-}"
 echo "clang_bin=${clang_bin:-}"
 echo "autoconf_dir=${autoconf_dir:-}"
 echo "build_number=${BUILD_NUMBER:-}"
-print_build_debug_info
 
 # Darwin lacks autoconf, install it for this build.
 install_autoconf "$autoconf_dir" "$out_path"
@@ -113,7 +106,6 @@ mkdir -p "$build_dir"
 
 
 echo "Configure done"
-print_build_debug_info
 echo "Making images ...."
 
 # Make
@@ -122,7 +114,6 @@ make -C "$build_dir" LOG=${make_log_level:-debug} ${quiet:+-s} images
 
 
 echo "Images done"
-print_build_debug_info
 
 [[ -n "${dist_dir:-}" ]] || exit 0
 
@@ -138,7 +129,6 @@ cp "$build_dir"/build.log "$dist_dir"
 cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
 
 echo "Dist done"
-print_build_debug_info
 
 "${build_dir}/images/jdk/bin/jlink" \
   --no-header-files \
@@ -148,6 +138,3 @@ print_build_debug_info
   --add-modules java.base,java.compiler,java.datatransfer,java.desktop,java.instrument,java.logging,java.management,java.management.rmi,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.se,java.security.jgss,java.security.sasl,java.smartcardio,java.sql,java.sql.rowset,java.transaction.xa,java.xml,java.xml.crypto,jdk.accessibility,jdk.aot,jdk.attach,jdk.charsets,jdk.compiler,jdk.crypto.cryptoki,jdk.crypto.ec,jdk.dynalink,jdk.hotspot.agent,jdk.httpserver,jdk.internal.ed,jdk.internal.jvmstat,jdk.internal.le,jdk.internal.vm.ci,jdk.internal.vm.compiler,jdk.internal.vm.compiler.management,jdk.jartool,jdk.javadoc,jdk.jdi,jdk.jdwp.agent,jdk.jfr,jdk.jlink,jdk.jsobject,jdk.localedata,jdk.management,jdk.management.agent,jdk.management.jfr,jdk.naming.dns,jdk.naming.rmi,jdk.net,jdk.pack,jdk.scripting.nashorn,jdk.scripting.nashorn.shell,jdk.sctp,jdk.security.auth,jdk.security.jgss,jdk.unsupported,jdk.xml.dom,jdk.zipfs \
   --output "${build_dir}/java-runtime"
 (cd "${build_dir}/java-runtime" && zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" .)
-
-
-print_build_debug_info
