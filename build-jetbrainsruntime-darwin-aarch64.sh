@@ -204,7 +204,7 @@ echo "Dist done"
     --no-man-pages \
     --compress=2 \
     --module-path="${build_dir}/images/jdk/jmods" \
-    --add-modules $(xargs < ${top}/toolchain/jdk/build/jdk11-modules.list | sed s/" "/,/g) \
+    --add-modules $(xargs < ${top}/toolchain/jdk/build/jetbrainsruntime-modules.list | sed s/" "/,/g) \
     --output "${build_dir}/java-runtime/Contents/Home"
 
   # Rewrite absolute references to rpath-relative one
