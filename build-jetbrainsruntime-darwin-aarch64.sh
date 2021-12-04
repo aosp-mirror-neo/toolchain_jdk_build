@@ -43,7 +43,7 @@ function usage() {
   declare -r prog="${0##*/}"
   cat <<EOF
 Usage:
-    $prog [-q] [-d <dist_dir>] [-o <out_dit>] [-f <jnf_dir>] -b <build_number>
+    $prog [-q] [-d <dist_dir>] [-o <out_dit>] -b <build_number>
 The JDK is built in <out_dir> (or "out" if unset).
 If <dist_dir> is set, artifacts are created there.
 Specify JBR build number with <build_number>
@@ -171,10 +171,6 @@ declare -r bundle_dir=$(find $build_dir/images/jdk-bundle/ -type d -depth 1 -nam
   # Bundle JavaNativeFoundation
   if [ "${jnf_dir:-}" ]; then
    ditto "$(realpath $jnf_dir)" ${bundle_dir}/Contents/Home/Frameworks
-
-   # b/194917144 temoporary fix
-   # TODO(2022-09-01) check if this still required
-   find ${bundle_dir}/Contents/Home/Frameworks -name '*JavaNativeFoundation.tbd' -exec rm -rf {} \;
   fi
 
   # Rewrite absolute references to rpath-relative one
