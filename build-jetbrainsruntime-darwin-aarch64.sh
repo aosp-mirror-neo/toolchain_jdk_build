@@ -11,75 +11,8 @@
 #   configure.log
 #   build.log
 # Specify -q to suppress most of the output noise
-# Use -f to override location of JavaNativeFundation framework. By default one from Xcode would be used
 
-set -eu
-
-# Alas, Darwin does not have realpath.
-realpath() {
-    cd $1 && pwd
-}
-
-# Creates the directory if it does not exist and returns its absolute path
-function make_target_dir() {
-  mkdir -p "$1" && realpath "$1"
-}
-
-# Installs autoconf into specified directory. The second argument is working directory.
-function install_autoconf() {
-  local -r workdir=$(make_target_dir "$2")
-  local -r installdir=$(make_target_dir "$1")
-  tar -C "$workdir" -xzf "$top/toolchain/jdk/deps/src/autoconf-2.69.tar.gz"
-  (cd "$workdir"/autoconf-2.69 &&
-     ./configure --prefix="$installdir" ${quiet:+--quiet} &&
-     make ${quiet:+-s} install
-  )
-}
-
-# Converts version string to comparable number `12.3` -> 012003000000. Works for at most 4 fields
-function ver { printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' '); }
-
-function usage() {
-  declare -r prog="${0##*/}"
-  cat <<EOF
-Usage:
-    $prog [-q] [-d <dist_dir>] [-o <out_dit>] -b <build_number>
-The JDK is built in <out_dir> (or "out" if unset).
-If <dist_dir> is set, artifacts are created there.
-Specify JBR build number with <build_number>
-With -q, runs with minimum noise.
-EOF
-  exit 1
-}
-
-while getopts 'qb:d:o:' opt; do
-  case $opt in
-    b) build_number=$OPTARG ;;
-    o) out_dir_option=$OPTARG;;
-    d) dist_dir_option=$OPTARG;;
-    q) quiet=t ;;
-    *) usage ;;
-  esac
-done
-shift $(($OPTIND-1))
-(($#==0)) || usage
-
-# use ENV values or defaults if command line parameters are not set
-if [ -z "${out_dir_option:-}" ]; then
-    out_dir_option=${OUT_DIR:-"out"}
-fi
-
-if [ -z "${build_number:-}" ]; then
-    build_number=${BUILD_NUMBER:-"dev"}
-fi
-
-if [ -z "${dist_dir_option:-}" ]; then
-    dist_dir_option=${DIST_DIR:-}
-fi
-
-if [[ -n "${dist_dir_option:-}" ]]; then
-  dist_dir="$(make_target_dir "${dist_dir_option}")"
-fi
+source $(dirname $0)/build-jetbrainsruntime-common.sh
 
 declare -r sdk_version=$(xcrun --show-sdk-version)
 [ $(ver $sdk_version) -ge $(ver 11.1) ] ||
@@ -90,11 +23,6 @@ declare -r sdk_version=$(xcrun --show-sdk-version)
         exit 1
     }
 
-declare -r out_path=$(make_target_dir "${out_dir_option}")
-declare -r sysroot=$(xcrun --show-sdk-path)
-declare -r build_dir="$out_path/build"
-declare -r top=$(realpath "$(dirname "$0")/../../..")
-declare -r autoconf_dir=$(make_target_dir "$out_path/autoconf")
 declare -r boot_jdk="$top/prebuilts/jdk/studio/jdk11/mac/Contents/Home"
 declare -r boot_jdk_version=$($boot_jdk/bin/java -version 2>&1 | head -1 | cut -d'"' -f2)
 
@@ -138,6 +66,7 @@ install_autoconf "$autoconf_dir" "$out_path"
      --with-native-debug-symbols=external \
      --with-stdc++lib=static \
      --with-toolchain-type=clang \
+     --with-tools-dir="$clang_bin" \
      --without-version-pre \
      --with-vendor-name="JetBrains s.r.o." \
      --with-version-opt="$(sed 's/^.*-//' "${top}/external/jetbrains/JetBrainsRuntime/build.txt")-${build_number}" \
@@ -148,19 +77,12 @@ install_autoconf "$autoconf_dir" "$out_path"
      --with-jvm-features="shenandoahgc"
 )
 
-echo "Configure done"
-echo "Making images ...."
-
 # Make
 declare -r make_log_level=${quiet:+warn}
 make -C "$build_dir" LOG=${make_log_level:-debug} ${quiet:+-s} images
 
-echo "Images done"
-
 # Dist
 [[ -n "${dist_dir:-}" ]] || exit 0
-
-echo "Making Dist ...."
 
 rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
 declare -r bundle_dir=$(find $build_dir/images/jdk-bundle/ -type d -depth 1 -name 'jdk-*.jdk')
@@ -189,7 +111,7 @@ cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
 
 echo "Dist done"
 
-#Assemble JDK-runtime
+# Java Runtime
 (
   mkdir -p  "${build_dir}/java-runtime"
   cd  "${build_dir}/java-runtime"

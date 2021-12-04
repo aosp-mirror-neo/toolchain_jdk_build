@@ -11,43 +11,7 @@
 #   build.log
 # Specify -q to suppress most of the output noise
 
-set -eu
-declare -r prog="${0##*/}"
-
-function usage() {
-  cat <<EOF
-Usage:
-    $prog [-q]
-The JDK is built in OUT_DIR (or "out" if unset).
-If DIST_DIR is set, artifacts are created there.
-With -q, runs with minimum noise.
-EOF
-  exit 1
-}
-
-# Creates the directory if it does not exist and returns its absolute path
-function make_target_dir() {
-  mkdir -p "$1" && realpath "$1"
-}
-
-if [[ -n "${DIST_DIR:-}" ]]; then
-  dist_dir="$(make_target_dir "${DIST_DIR}")"
-fi
-
-while getopts 'qd:' opt; do
-  case $opt in
-    q) quiet=t ;;
-    *) usage ;;
-  esac
-done
-shift $(($OPTIND-1))
-(($#==0)) || usage
-
-declare -r out_path=$(make_target_dir "${OUT_DIR:-"out"}")
-declare -r sysroot="$out_path/sysroot"
-declare -r build_dir="$out_path/build"
-declare -r top=$(realpath "$(dirname "$0")/../../..")
-declare -r clang_bin="$top/prebuilts/clang/host/linux-x86/clang-r416183b/bin"
+source $(dirname $0)/build-jetbrainsruntime-common.sh
 
 # "Installs" given Debian packages into specified directory.
 function unpack_dependencies() {
@@ -102,7 +66,7 @@ mkdir -p "$build_dir"
      --with-tools-dir="$clang_bin" \
      --without-version-pre \
      --with-vendor-name="JetBrains s.r.o." \
-     --with-version-opt="$(sed 's/^.*-//' "${top}/external/jetbrains/JetBrainsRuntime/build.txt")-${BUILD_NUMBER}" \
+     --with-version-opt="$(sed 's/^.*-//' "${top}/external/jetbrains/JetBrainsRuntime/build.txt")-${build_number}" \
      --with-zlib=bundled \
      --x-libraries="$sysroot/usr/lib/x86_64-linux-gnu" \
      --x-includes="$sysroot/usr/include" \

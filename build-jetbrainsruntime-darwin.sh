@@ -11,60 +11,7 @@
 #   build.log
 # Specify -q to suppress most of the output noise
 
-set -eu
-declare -r prog="${0##*/}"
-
-function usage() {
-  cat <<EOF
-Usage:
-    $prog [-q]
-The JDK is built in OUT_DIR (or "out" if unset).
-If DIST_DIR is set, artifacts are created there.
-With -q, runs with minimum noise.
-EOF
-  exit 1
-}
-
-# Alas, Darwin does not have realpath.
-realpath() {
-    cd $1 && pwd
-}
-
-# Creates the directory if it does not exist and returns its absolute path
-function make_target_dir() {
-  mkdir -p "$1" && realpath "$1"
-}
-
-# Installs autoconf into specified directory. The second argument is working directory.
-function install_autoconf() {
-  local -r workdir=$(make_target_dir "$2")
-  local -r installdir=$(make_target_dir "$1")
-  tar -C "$workdir" -xzf "$top/toolchain/jdk/deps/src/autoconf-2.69.tar.gz"
-  (cd "$workdir"/autoconf-2.69 &&
-     ./configure --prefix="$installdir" ${quiet:+--quiet} &&
-     make ${quiet:+-s} install
-  )
-}
-
-if [[ -n "${DIST_DIR:-}" ]]; then
-  dist_dir="$(make_target_dir "${DIST_DIR}")"
-fi
-
-while getopts 'qd:' opt; do
-  case $opt in
-    q) quiet=t ;;
-    *) usage ;;
-  esac
-done
-shift $(($OPTIND-1))
-(($#==0)) || usage
-
-declare -r out_path=$(make_target_dir "${OUT_DIR:-"out"}")
-declare -r sysroot=$(xcrun --show-sdk-path)
-declare -r build_dir="$out_path/build"
-declare -r top=$(realpath "$(dirname "$0")/../../..")
-declare -r clang_bin="$top/prebuilts/clang/host/darwin-x86/clang-r416183b/bin"
-declare -r autoconf_dir=$(make_target_dir "$out_path/autoconf")
+source $(dirname $0)/build-jetbrainsruntime-common.sh
 
 echo "Building Mac JDK......."
 echo "out_path=${out_path:-}"
@@ -74,7 +21,7 @@ echo "build_dir=${build_dir:-}"
 echo "top=${top:-}"
 echo "clang_bin=${clang_bin:-}"
 echo "autoconf_dir=${autoconf_dir:-}"
-echo "build_number=${BUILD_NUMBER:-}"
+echo "build_number=${build_number:-}"
 
 # Darwin lacks autoconf, install it for this build.
 install_autoconf "$autoconf_dir" "$out_path"
@@ -97,7 +44,7 @@ mkdir -p "$build_dir"
      --with-tools-dir="$clang_bin" \
      --without-version-pre \
      --with-vendor-name="JetBrains s.r.o." \
-     --with-version-opt="$(sed 's/^.*-//' "${top}/external/jetbrains/JetBrainsRuntime/build.txt")-${BUILD_NUMBER}" \
+     --with-version-opt="$(sed 's/^.*-//' "${top}/external/jetbrains/JetBrainsRuntime/build.txt")-${build_number}" \
      --with-zlib=bundled \
      --with-jvm-features="shenandoahgc" \
      --with-extra-cflags="-fno-delete-null-pointer-checks" \
@@ -113,14 +60,11 @@ declare -r make_log_level=${quiet:+warn}
 make -C "$build_dir" LOG=${make_log_level:-debug} ${quiet:+-s} images
 
 
-echo "Images done"
-
+# Dist
 [[ -n "${dist_dir:-}" ]] || exit 0
 
-echo "Making Dist ...."
-
-# Dist
 rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
+declare -r bundle_dir=$(find $build_dir/images/jdk-bundle/ -type d -depth 1 -name 'jdk-*.jdk')
 (cd "$build_dir/images/jdk" &&
   zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . -x 'demo/*' -x'man/*' -x'*.dSYM' &&
   zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.dSYM'
@@ -128,13 +72,22 @@ rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configur
 cp "$build_dir"/build.log "$dist_dir"
 cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
 
-echo "Dist done"
 
-"${build_dir}/images/jdk/bin/jlink" \
-  --no-header-files \
-  --no-man-pages \
-  --compress=2 \
-  --module-path="${build_dir}/images/jdk/jmods" \
-  --add-modules $(xargs < ${top}/toolchain/jdk/build/jetbrainsruntime-modules.list | sed s/" "/,/g) \
-  --output "${build_dir}/java-runtime"
-(cd "${build_dir}/java-runtime" && zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" .)
+# Java Runtime
+(
+  mkdir -p  "${build_dir}/java-runtime"
+  cd  "${build_dir}/java-runtime"
+
+  "${build_dir}/bin/jlink" \
+    --no-header-files \
+    --no-man-pages \
+    --compress=2 \
+    --module-path="${build_dir}/images/jdk/jmods" \
+    --add-modules $(xargs < ${top}/toolchain/jdk/build/jetbrainsruntime-modules.list | sed s/" "/,/g) \
+    --output "${build_dir}/java-runtime/Contents/Home"
+
+  ditto ${bundle_dir}/Contents/MacOS ./Contents/MacOS
+  ditto ${bundle_dir}/Contents/Info.plist ./Contents/Info.plist
+
+  zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" .
+)
