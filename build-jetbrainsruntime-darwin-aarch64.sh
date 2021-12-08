@@ -66,7 +66,6 @@ install_autoconf "$autoconf_dir" "$out_path"
      --with-native-debug-symbols=external \
      --with-stdc++lib=static \
      --with-toolchain-type=clang \
-     --with-tools-dir="$clang_bin" \
      --without-version-pre \
      --with-vendor-name="JetBrains s.r.o." \
      --with-version-opt="$(sed 's/^.*-//' "${top}/external/jetbrains/JetBrainsRuntime/build.txt")-${build_number}" \

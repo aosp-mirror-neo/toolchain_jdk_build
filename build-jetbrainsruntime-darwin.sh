@@ -78,7 +78,7 @@ cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
   mkdir -p  "${build_dir}/java-runtime"
   cd  "${build_dir}/java-runtime"
 
-  "${build_dir}/bin/jlink" \
+  "${build_dir}/images/jdk/bin/jlink" \
     --no-header-files \
     --no-man-pages \
     --compress=2 \
