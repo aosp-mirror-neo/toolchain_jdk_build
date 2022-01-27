@@ -115,13 +115,21 @@ echo "Dist done"
   mkdir -p  "${build_dir}/java-runtime"
   cd  "${build_dir}/java-runtime"
 
+  if grep -q 'jdk.aot' ${top}/toolchain/jdk/build/jetbrainsruntime-modules.list
+  then
+      echo "Excluding jdk.aot"
+      cat ${top}/toolchain/jdk/build/jetbrainsruntime-modules.list | grep -v 'jdk.aot\|jdk.internal.vm.compiler' > "${build_dir}/aarch64-modules.list"
+  else
+      cat ${top}/toolchain/jdk/build/jetbrainsruntime-modules.list > "${build_dir}/aarch64-modules.list"
+  fi
+
   # Use jlink from Boot JDK as we are cross-compiling
   "${boot_jdk}/bin/jlink" \
     --no-header-files \
     --no-man-pages \
     --compress=2 \
     --module-path="${build_dir}/images/jdk/jmods" \
-    --add-modules $(xargs < ${top}/toolchain/jdk/build/jetbrainsruntime-modules.list | sed s/" "/,/g) \
+    --add-modules $(xargs < ${build_dir}/aarch64-modules.list | sed s/" "/,/g) \
     --output "${build_dir}/java-runtime/Contents/Home"
 
   # Rewrite absolute references to rpath-relative one
