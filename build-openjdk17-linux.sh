@@ -70,11 +70,18 @@ function unpack_dependencies() {
     esac
     [[ -n "${quiet:-}" ]] || printf "Unpacked %s\n" "$deb"
   done
+
+  # Rewrite absolute symlinks that point outside the sysroot to relative
+  # symlinks to the corresponding files in the sysroot.
+  for link in $(find "${target_dir}" -type l -lname '/*'); do
+    target=$(readlink ${link})
+    relative_target=$(realpath --relative-to $(dirname ${link}) ${target_dir})${target}
+    ln -sfn ${relative_target} ${link}
+  done
 }
 
 # Prepare
-unpack_dependencies "$sysroot" \
-  "$top/toolchain/jdk/deps/"{libasound,libcups2,libfreetype,libice,libpng,libsm,libx}*.deb
+unpack_dependencies "$sysroot" $top/toolchain/jdk/deps/*.deb
 
 # Configure
 mkdir -p "$build_dir"
@@ -103,8 +110,9 @@ mkdir -p "$build_dir"
      --with-zlib=bundled \
      --x-libraries="$sysroot/usr/lib/x86_64-linux-gnu" \
      --x-includes="$sysroot/usr/include" \
-     --with-extra-cflags="-fno-delete-null-pointer-checks" \
-     --with-extra-ldflags="-fuse-ld=lld" \
+     --with-extra-cflags="--sysroot=$sysroot -fno-delete-null-pointer-checks" \
+     --with-extra-cxxflags="--sysroot=$sysroot -fno-delete-null-pointer-checks" \
+     --with-extra-ldflags="--sysroot=$sysroot -fuse-ld=lld" \
      AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
 )
 
