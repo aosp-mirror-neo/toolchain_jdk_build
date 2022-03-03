@@ -11,9 +11,11 @@ pkgs=$(echo \
   libfreetype6 \
   libfreetype6-dev \
   libgcc-4.8-dev \
+  libgcc-8-dev \
+  libgcc1 \
   libice-dev \
-  libstdc++6 \
   libstdc++-4.8-dev \
+  libstdc++-8-dev \
   libpng12-0 \
   libpng12-dev \
   libsm-dev \
@@ -31,6 +33,7 @@ pkgs=$(echo \
   libxfixes3 \
   libxi-dev \
   libxi6 \
+  libxrandr-dev \
   libxrender-dev \
   libxrender1 \
   libxt-dev \
@@ -42,6 +45,7 @@ pkgs=$(echo \
   x11proto-fixes-dev \
   x11proto-input-dev \
   x11proto-kb-dev \
+  x11proto-randr-dev \
   x11proto-record-dev \
   x11proto-render-dev \
   x11proto-xext-dev \
@@ -51,9 +55,9 @@ pkgs=$(echo \
 
 cd $(dirname $0)/../deps
 
-apt download $pkgs
+apt-get download $pkgs
 mkdir -p src
-(cd src && apt source --download-only $pkgs)
+(cd src && apt-get source --download-only $pkgs)
 (cd src && curl --location -O http://download.savannah.gnu.org/releases/freetype/freetype-2.8.tar.bz2)
 (cd src && curl --location -O http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz)
 
