@@ -75,7 +75,8 @@ function unpack_dependencies() {
   # symlinks to the corresponding files in the sysroot.
   for link in $(find "${target_dir}" -type l -lname '/*'); do
     target=$(readlink ${link})
-    relative_target=$(realpath --relative-to $(dirname ${link}) ${target_dir})${target}
+    relative_target_dir=$(python -c 'import os.path, sys; print(os.path.relpath(*sys.argv[1:]))' ${target_dir} $(dirname ${link}))
+    relative_target=${relative_target_dir}/${target}
     ln -sfn ${relative_target} ${link}
   done
 }
