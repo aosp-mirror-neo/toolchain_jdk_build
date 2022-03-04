@@ -84,6 +84,12 @@ function unpack_dependencies() {
 # Prepare
 unpack_dependencies "$sysroot" $top/toolchain/jdk/deps/*.deb
 
+function dist_logs() {
+    [[ -n "${dist_dir:-}" && -e "${build_dir}/build.log" ]] && cp "${build_dir}/build.log" "${dist_dir}/"
+    [[ -n "${dist_dir:-}" && -e "${build_dir}/configure-support/config.log" ]] && cp "${build_dir}/configure-support/config.log" "${dist_dir}/"
+}
+trap dist_logs EXIT
+
 # Configure
 mkdir -p "$build_dir"
 [[ -n "${quiet:-}" ]] || set -x
@@ -128,5 +134,3 @@ rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,build.log,configure.log}
   zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . -x 'demo/*' -x'man/*' -x'*.debuginfo' && 
   zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.debuginfo'
 )
-cp "$build_dir"/build.log "$dist_dir"
-cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
