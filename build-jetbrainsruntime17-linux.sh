@@ -39,9 +39,7 @@ function unpack_dependencies() {
 }
 
 # Prepare
-unpack_dependencies "$sysroot" \
-  "$top/toolchain/jdk/deps/"{libasound,libcups2,libfreetype,libice,libpng,libsm,libx}*.deb
-
+unpack_dependencies "$sysroot" $top/toolchain/jdk/deps/*.deb
 # Configure tools needed to build the JDK
 mkdir -p "$build_dir"
 [[ -n "${quiet:-}" ]] || set -x
@@ -63,14 +61,15 @@ mkdir -p "$build_dir"
         --with-zlib=bundled \
         --x-libraries="$sysroot/usr/lib/x86_64-linux-gnu" \
         --x-includes="$sysroot/usr/include" \
-        --with-extra-cflags="-fno-delete-null-pointer-checks" \
-        --with-extra-ldflags="-fuse-ld=lld" \
         --without-version-pre \
         --with-native-debug-symbols=external \
         --with-freetype-include="$top/external/jetbrains/JetBrainsRuntime17/src/java.desktop/share/native/libfreetype/include" \
         --with-freetype-lib="$sysroot/usr/lib/x86_64-linux-gnu" \
         --with-freetype=system \
         --with-sysroot="$sysroot" \
+        --with-extra-cflags="--sysroot=$sysroot -fno-delete-null-pointer-checks" \
+        --with-extra-cxxflags="--sysroot=$sysroot -fno-delete-null-pointer-checks" \
+        --with-extra-ldflags="--sysroot=$sysroot -fuse-ld=lld" \
         AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
 )
 
