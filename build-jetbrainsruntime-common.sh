@@ -72,9 +72,9 @@ if [[ -n "${dist_dir_option:-}" ]]; then
   dist_dir="$(make_target_dir "${dist_dir_option}")"
 fi
 
-declare -r out_path=$(make_target_dir "${out_dir_option}")
-declare -r build_dir="$out_path/build"
-declare -r top=$(realpath "$(dirname "$0")/../../..")
+declare out_path=$(make_target_dir "${out_dir_option}")
+declare build_dir="$out_path/build"
+declare top=$(realpath "$(dirname "$0")/../../..")
 declare -r autoconf_dir=$(make_target_dir "$out_path/autoconf")
 
 case $(uname) in
@@ -85,6 +85,8 @@ case $(uname) in
   Darwin)
     declare -r clang_bin="$top/prebuilts/clang/host/darwin-x86/clang-r416183b/bin"
     declare -r sysroot=$(xcrun --show-sdk-path)
+    ;;
+  CYGWIN*) # Windows Cygwin
     ;;
   *) echo "unknown OS:" $(uname) && exit 1;;
 esac
