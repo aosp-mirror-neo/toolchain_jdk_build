@@ -37,11 +37,25 @@ function unpack_dependencies() {
     esac
     [[ -n "${quiet:-}" ]] || printf "Unpacked %s\n" "$deb"
   done
+
+   # Rewrite absolute symlinks that point outside the sysroot to relative
+  # symlinks to the corresponding files in the sysroot.
+  for link in $(find "${target_dir}" -type l -lname '/*'); do
+    target=$(readlink ${link})
+    relative_target_dir=$(python -c 'import os.path, sys; print(os.path.relpath(*sys.argv[1:]))' ${target_dir} $(dirname ${link}))
+    relative_target=${relative_target_dir}/${target}
+    ln -sfn ${relative_target} ${link}
+  done
 }
 
 # Prepare
-unpack_dependencies "$sysroot" \
-  "$top/toolchain/jdk/deps/"{libasound,libcups2,libfreetype,libice,libpng,libsm,libx}*.deb
+unpack_dependencies "$sysroot" $top/toolchain/jdk/deps/*.deb
+
+function dist_logs() {
+    [[ -n "${dist_dir:-}" && -e "${build_dir}/build.log" ]] && cp "${build_dir}/build.log" "${dist_dir}/"
+    [[ -n "${dist_dir:-}" && -e "${build_dir}/configure-support/config.log" ]] && cp "${build_dir}/configure-support/config.log" "${dist_dir}/"
+}
+trap dist_logs EXIT
 
 # Configure
 mkdir -p "$build_dir"
@@ -70,8 +84,9 @@ mkdir -p "$build_dir"
      --with-zlib=bundled \
      --x-libraries="$sysroot/usr/lib/x86_64-linux-gnu" \
      --x-includes="$sysroot/usr/include" \
-     --with-extra-cflags="-fno-delete-null-pointer-checks" \
-     --with-extra-ldflags="-fuse-ld=lld" \
+     --with-extra-cflags="--sysroot=$sysroot -fno-delete-null-pointer-checks" \
+     --with-extra-cxxflags="--sysroot=$sysroot -fno-delete-null-pointer-checks" \
+     --with-extra-ldflags="--sysroot=$sysroot -fuse-ld=lld" \
      AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
 )
 
@@ -86,8 +101,6 @@ rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configur
   zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . -x 'demo/*' -x'man/*' -x'*.debuginfo' && 
   zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.debuginfo'
 )
-cp "$build_dir"/build.log "$dist_dir"
-cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
 
 "${build_dir}/images/jdk/bin/jlink" \
   --no-header-files \
