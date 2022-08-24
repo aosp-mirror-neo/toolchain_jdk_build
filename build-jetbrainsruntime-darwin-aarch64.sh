@@ -97,8 +97,8 @@ declare -r bundle_dir=$(find $build_dir/images/jdk-bundle/ -type d -depth 1 -nam
   # Rewrite absolute references to rpath-relative one
   install_name_tool -change @rpath/JavaNativeFoundation.framework/Versions/A/JavaNativeFoundation @loader_path/../Frameworks/JavaNativeFoundation.framework/JavaNativeFoundation ${bundle_dir}/Contents/Home/lib/libawt.dylib
 
-  zip -9rDy${quiet:+q} "$dist_dir"/jdk-bundle.zip . -x'*.dSYM/*' -x'*/man/*' -x'*/demo/*'
-  zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.dSYM/*'
+  zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . --exclude 'Contents/Home/demo/*' --exclude 'Contents/Home/man/*' --exclude '*.dSYM*'
+  zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . --include '*.dSYM*'
 
   echo $'\n\n===================================='
   echo "JDK Bundle $dist_dir/jdk-bundle.zip"
@@ -112,6 +112,7 @@ echo "Dist done"
 
 # Java Runtime
 (
+  rm -rf "${build_dir}/java-runtime"
   mkdir -p  "${build_dir}/java-runtime"
   cd  "${build_dir}/java-runtime"
 
@@ -128,6 +129,7 @@ echo "Dist done"
     --no-header-files \
     --no-man-pages \
     --compress=2 \
+    --strip-debug \
     --module-path="${build_dir}/images/jdk/jmods" \
     --add-modules $(xargs < ${build_dir}/aarch64-modules.list | sed s/" "/,/g) \
     --output "${build_dir}/java-runtime/Contents/Home"
@@ -138,7 +140,7 @@ echo "Dist done"
   ditto ${bundle_dir}/Contents/MacOS ./Contents/MacOS
   ditto ${bundle_dir}/Contents/Info.plist ./Contents/Info.plist
 
-  zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" . -x'*.dSYM/*' -x'*/man/*' -x'*/demo/*'
+  zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" .
 
   echo $'\n\n===================================='
   echo "JDK Runtime $dist_dir/jdk-runtime.zip"

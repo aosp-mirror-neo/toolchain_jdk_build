@@ -65,9 +65,10 @@ make -C "$build_dir" LOG=${make_log_level:-debug} ${quiet:+-s} images
 
 rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
 declare -r bundle_dir=$(find $build_dir/images/jdk-bundle/ -type d -depth 1 -name 'jdk-*.jdk')
-(cd "$build_dir/images/jdk" &&
-  zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . -x 'demo/*' -x'man/*' -x'*.dSYM/*' &&
-  zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.dSYM/*'
+(
+  cd "$bundle_dir"
+  zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . --exclude 'Contents/Home/demo/*' --exclude 'Contents/Home/man/*' --exclude '*.dSYM*'
+  zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . --include '*.dSYM*'
 )
 cp "$build_dir"/build.log "$dist_dir"
 cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
@@ -75,12 +76,14 @@ cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
 
 # Java Runtime
 (
+  rm -rf "${build_dir}/java-runtime"
   mkdir -p  "${build_dir}/java-runtime"
   cd  "${build_dir}/java-runtime"
 
   "${build_dir}/images/jdk/bin/jlink" \
     --no-header-files \
     --no-man-pages \
+    --strip-debug \
     --compress=2 \
     --module-path="${build_dir}/images/jdk/jmods" \
     --add-modules $(xargs < ${top}/external/jetbrains/JetBrainsRuntime17/jb/project/tools/common/modules.list | sed s/" "//g) \

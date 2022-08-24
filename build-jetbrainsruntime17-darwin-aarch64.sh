@@ -68,9 +68,10 @@ make -C "$build_dir" LOG=${make_log_level:-debug} ${quiet:+-s} images
 
 rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
 declare -r bundle_dir=$(find $build_dir/images/jdk-bundle/ -type d -depth 1 -name 'jdk-*.jdk')
-(cd "$build_dir/images/jdk-bundle" &&
-  zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . -x 'demo/*' -x'man/*' -x'*.dSYM/*' &&
-  zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.dSYM/*'
+(
+  cd "$bundle_dir"
+  zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . --exclude 'Contents/Home/demo/*' --exclude 'Contents/Home/man/*' --exclude '*.dSYM*'
+  zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . --include '*.dSYM*'
 )
 cp "$build_dir"/build.log "$dist_dir"
 cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
@@ -79,6 +80,7 @@ echo "Dist done"
 
 # Java Runtime
 (
+  rm -rf "${build_dir}/java-runtime"
   mkdir -p  "${build_dir}/java-runtime"
   cd  "${build_dir}/java-runtime"
 
@@ -87,6 +89,7 @@ echo "Dist done"
     --no-header-files \
     --no-man-pages \
     --compress=2 \
+    --strip-debug \
     --module-path="${build_dir}/images/jdk/jmods" \
     --add-modules $(xargs < ${top}/external/jetbrains/JetBrainsRuntime17/jb/project/tools/common/modules.list | sed s/" "//g) \
     --output "${build_dir}/java-runtime/Contents/Home"
@@ -95,5 +98,5 @@ echo "Dist done"
   ditto ${bundle_dir}/Contents/MacOS ./Contents/MacOS
   ditto ${bundle_dir}/Contents/Info.plist ./Contents/Info.plist
 
-  zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" . -x'*.dSYM/*' -x'*/man/*' -x'*/demo/*'
+  zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" .
 )
