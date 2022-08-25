@@ -63,7 +63,7 @@ declare -r out_path=$(make_target_dir "$1")
 declare -r sysroot=$(xcrun --show-sdk-path)
 declare -r build_dir="$out_path/build"
 declare -r top=$(realpath "$(dirname "$0")/../../..")
-declare -r clang_bin="$top/prebuilts/clang/host/darwin-x86/clang-r450784e/bin"
+declare -r clang_bin="$top/prebuilts/clang/host/darwin-x86/clang-r416183b/bin"
 declare -r autoconf_dir=$(make_target_dir "$out_path/autoconf")
 
 # So that configure finds tools like dsymutil in ${clang_bin} instead of /usr/bin
