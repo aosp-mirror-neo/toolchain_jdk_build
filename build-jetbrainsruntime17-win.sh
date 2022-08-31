@@ -69,6 +69,9 @@ cd "${build_dir}"
   --module-path="${build_dir}/images/jdk/jmods" \
   --add-modules $(xargs < ${top}/external/jetbrains/JetBrainsRuntime17/jb/project/tools/common/modules.list | sed s/" "//g)
 
+grep -v "^JAVA_VERSION" "${build_dir}/jdk/release" | grep -v "^MODULES" >> "${build_dir}/java-runtime/release"
+cp "${build_dir}/java-runtime/release" "${dist_dir}"
+
 cd java-runtime
 zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" .
 )

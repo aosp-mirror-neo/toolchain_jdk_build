@@ -98,6 +98,9 @@ cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
     --add-modules $(xargs < ${top}/toolchain/jdk/build/jetbrainsruntime-modules.list | sed s/" "/,/g) \
     --output "java-runtime"
 
+  grep -v "^JAVA_VERSION" "${build_dir}/jdk/release" | grep -v "^MODULES" >> "${build_dir}/java-runtime/release"
+  cp "${build_dir}/java-runtime/release" "${dist_dir}"
+
   cd java-runtime
   zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" .
 )
