@@ -89,6 +89,9 @@ cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
     --add-modules $(xargs < ${top}/toolchain/jdk/build/jetbrainsruntime-modules.list | sed s/" "/,/g) \
     --output "${build_dir}/java-runtime/Contents/Home"
 
+  grep -v "^JAVA_VERSION" "${build_dir}/jdk/release" | grep -v "^MODULES" >> "${build_dir}/java-runtime/release"
+  cp "${build_dir}/java-runtime/release" "${dist_dir}"
+
   ditto ${bundle_dir}/Contents/MacOS ./Contents/MacOS
   ditto ${bundle_dir}/Contents/Info.plist ./Contents/Info.plist
 

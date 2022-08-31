@@ -134,6 +134,8 @@ echo "Dist done"
     --add-modules $(xargs < ${build_dir}/aarch64-modules.list | sed s/" "/,/g) \
     --output "${build_dir}/java-runtime/Contents/Home"
 
+  grep -v "^JAVA_VERSION" "${build_dir}/jdk/release" | grep -v "^MODULES" >> "${build_dir}/java-runtime/release"
+  cp "${build_dir}/java-runtime/release" "${dist_dir}"
   # Rewrite absolute references to rpath-relative one
   install_name_tool -change @rpath/JavaNativeFoundation.framework/Versions/A/JavaNativeFoundation @loader_path/../Frameworks/JavaNativeFoundation.framework/JavaNativeFoundation Contents/Home/lib/libawt.dylib
 
