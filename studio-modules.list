@@ -1,0 +1,6 @@
+jdk.hotspot.agent
+jdk.internal.jvmstat
+jdk.internal.vm.compiler
+jdk.internal.vm.compiler.management
+jdk.jartool
+jdk.jlink

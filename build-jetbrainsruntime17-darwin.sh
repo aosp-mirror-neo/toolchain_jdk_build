@@ -80,13 +80,22 @@ cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
   mkdir -p  "${build_dir}/java-runtime"
   cd  "${build_dir}/java-runtime"
 
+  # 1. add studio mudules to jb/project/tools/common/modules.list
+  # 2. remove trailing comas, and remove duplicates
+  # 3. trim, and convert lines to coma-separated list
+ declare modules=$(
+  cat ${top}/external/jetbrains/JetBrainsRuntime17/jb/project/tools/common/modules.list ${top}/toolchain/jdk/build/studio-modules.list \
+  | sed s/","/" "/g | sort | uniq \
+  | xargs | sed s/" "/,/g
+)
+
   "${build_dir}/images/jdk/bin/jlink" \
     --no-header-files \
     --no-man-pages \
     --strip-debug \
     --compress=2 \
     --module-path="${build_dir}/images/jdk/jmods" \
-    --add-modules $(xargs < ${top}/external/jetbrains/JetBrainsRuntime17/jb/project/tools/common/modules.list | sed s/" "//g) \
+    --add-modules ${modules} \
     --output "${build_dir}/java-runtime/Contents/Home"
 
 

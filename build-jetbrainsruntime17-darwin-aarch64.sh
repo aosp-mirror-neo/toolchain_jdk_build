@@ -84,6 +84,17 @@ echo "Dist done"
   mkdir -p  "${build_dir}/java-runtime"
   cd  "${build_dir}/java-runtime"
 
+  # 1. add studio mudules to jb/project/tools/common/modules.list
+  # 2. remove trailing comas, and remove duplicates
+  # 3. remove modules non-applicable to aarch64
+  # 4. trim, and convert lines to coma-separated list
+  declare modules=$(
+    cat ${top}/external/jetbrains/JetBrainsRuntime17/jb/project/tools/common/modules.list ${top}/toolchain/jdk/build/studio-modules.list \
+    | sed s/","/" "/g | sort | uniq \
+    | grep -v 'jdk.internal.vm.compiler' \
+    | xargs | sed s/" "/,/g
+  )
+
   # Use jlink from Boot JDK as we are cross-compiling
   "${boot_jdk}/bin/jlink" \
     --no-header-files \
@@ -91,7 +102,7 @@ echo "Dist done"
     --compress=2 \
     --strip-debug \
     --module-path="${build_dir}/images/jdk/jmods" \
-    --add-modules $(xargs < ${top}/external/jetbrains/JetBrainsRuntime17/jb/project/tools/common/modules.list | sed s/" "//g) \
+    --add-modules ${modules} \
     --output "${build_dir}/java-runtime/Contents/Home"
 
   grep -v "^JAVA_VERSION" "${build_dir}/jdk/release" | grep -v "^MODULES" >> "${build_dir}/java-runtime/release"
