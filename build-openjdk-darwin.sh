@@ -2,7 +2,7 @@
 
 source $(dirname $0)/build-openjdk-common.sh
 
-clang_dir=${TOP}/prebuilts/clang/host/darwin-x86/clang-r416183b
+clang_dir=${TOP}/prebuilts/clang/host/darwin-x86/clang-r450784e
 freetype=freetype-2.8
 
 export PATH=${clang_dir}/bin:${PATH}
