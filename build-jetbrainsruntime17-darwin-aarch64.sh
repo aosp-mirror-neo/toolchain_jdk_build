@@ -64,8 +64,6 @@ declare -r make_log_level=${quiet:+warn}
 make -C "$build_dir" LOG=${make_log_level:-debug} ${quiet:+-s} images
 
 # Dist
-[[ -n "${dist_dir:-}" ]] || exit 0
-
 rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
 declare -r bundle_dir=$(find $build_dir/images/jdk-bundle/ -type d -depth 1 -name 'jdk-*.jdk')
 (
