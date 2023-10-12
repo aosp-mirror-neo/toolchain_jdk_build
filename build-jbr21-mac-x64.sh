@@ -13,6 +13,9 @@
 
 source $(dirname $0)/build-jetbrainsruntime-common.sh
 
+declare -r sources_dir="${top}/external/jetbrains/JetBrainsRuntime"
+declare -r boot_jdk=""
+
 echo "Building Mac JDK......."
 echo "out_path=${out_path:-}"
 echo "dist_dir=${dist_dir:-}"
@@ -22,6 +25,8 @@ echo "top=${top:-}"
 echo "clang_bin=${clang_bin:-}"
 echo "autoconf_dir=${autoconf_dir:-}"
 echo "build_number=${build_number:-}"
+echo "sources_dir=${sources_dir:-}"
+echo "boot_jdk=${boot_jdk:-}"
 echo "Xcode sdk version=$(xcrun --show-sdk-version)"
 xcodebuild -version
 
@@ -29,9 +34,6 @@ xcodebuild -version
 #TODO check all available env variables if they could be used for reproducible build opts
 #TODO Run basic tests `make run-test-tier1`
 #TODO use date from  make/conf/version-numbers.conf for reproducible build opts
-
-declare -r sources_dir="${top}/external/jetbrains/JetBrainsRuntime"
-declare -r boot_jdk=""
 
 if [ -f "$dist_dir"/jdk.zip ]; then
   echo "Re-using existing JDK $dist_dir/jdk.zip"
@@ -43,7 +45,6 @@ else
 
   # Configure
   mkdir -p "$build_dir"
-  [[ -n "${quiet:-}" ]] || set -x
   (cd "$build_dir" &&
      PATH="$autoconf_dir/bin":$PATH bash +x "$sources_dir/configure" \
      "${quiet:+--quiet}" \

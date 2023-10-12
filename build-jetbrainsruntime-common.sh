@@ -88,3 +88,5 @@ case $(uname) in
     ;;
   *) echo "unknown OS:" $(uname) && exit 1;;
 esac
+
+[[ -n "${quiet:-}" ]] || set -x
