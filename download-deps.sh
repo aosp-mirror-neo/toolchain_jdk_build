@@ -55,6 +55,10 @@ pkgs=$(echo \
 
 cd $(dirname $0)/../deps
 
+rm -rf src
+rm -f LICENSE
+rm -f *.deb
+
 apt-get download $pkgs
 mkdir -p src
 (cd src && apt-get source --download-only $pkgs)
