@@ -52,6 +52,7 @@ else
   (cd "$build_dir" &&
      PATH="$autoconf_dir/bin":$PATH bash +x "$sources_dir/configure" \
      "${quiet:+--quiet}" \
+     --openjdk-target=aarch64-apple-darwin \
      --with-vendor-name="JetBrains s.r.o." \
      --with-version-pre=$([ "$build_number" == "dev" ] && echo "dev" || echo "") \
      --with-version-build=$(numeric_build_number $build_number) \
@@ -71,9 +72,7 @@ else
      --with-boot-jdk="$boot_jdk" \
      --with-sysroot="$sysroot" \
      --with-stdc++lib=static \
-     --with-toolchain-type=clang \
-     --with-tools-dir="$clang_bin" \
-     AR=llvm-ar NM=llvm-nm OBJDUMP=llvm-objdump STRIP=llvm-strip
+     --with-toolchain-type=clang
   )
 
   echo "Configure done"
@@ -93,7 +92,6 @@ else
     zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . --include '*.diz'
   )
 fi
-
 
 echo "Creating java runtime ...."
 (
