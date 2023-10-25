@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# Builds JBR21
+# Builds JBR21 for Intel Mac
 # Usage:
-#   build-jbr21-mac-x64.sh [-q] [-o <OUT_DIR>] [-d <DIST_DIR>]
+#   build-jbr_next-mac-x64.sh [-q]
 # The JDK is built in OUT_DIR (or "out" if unset).
 # The following artifacts are created in DIST_DIR (or "out/dist" if unset):
 #   jdk.zip              archive of the JDK distribution
@@ -13,8 +13,8 @@
 
 source $(dirname $0)/build-jetbrainsruntime-common.sh
 
-declare -r sources_dir="${top}/external/jetbrains/JetBrainsRuntime"
-declare -r boot_jdk=""
+declare -r sources_dir="${top}/external/jetbrains/JetBrainsRuntime-next"
+declare -r boot_jdk="${top}/prebuilts/jdk/studio/jbrjdk21/mac-x64/Contents/Home"
 
 echo "Building Mac JDK......."
 echo "out_path=${out_path:-}"
@@ -30,15 +30,19 @@ echo "boot_jdk=${boot_jdk:-}"
 echo "Xcode sdk version=$(xcrun --show-sdk-version)"
 xcodebuild -version
 
-#TODO trap for logs
+function dist_logs() {
+    [[ -e "${build_dir}/build.log" ]] && cp "${build_dir}/build.log" "${dist_dir}/"
+    [[ -e "${build_dir}/configure-support/config.log" ]] && cp "${build_dir}/configure-support/config.log" "${dist_dir}/"
+}
+trap dist_logs EXIT
+
 #TODO check all available env variables if they could be used for reproducible build opts
-#TODO Run basic tests `make run-test-tier1`
 #TODO use date from  make/conf/version-numbers.conf for reproducible build opts
 
-if [ -f "$dist_dir"/jdk.zip ]; then
-  echo "Re-using existing JDK $dist_dir/jdk.zip"
+if [ -f "${dist_dir}"/jdk.zip ]; then
+  echo "Re-using existing JDK ${dist_dir}/jdk.zip"
 else
-  declare -r jbr_tag="$(sed 's/^.*b//' "$sources_dir/build.txt")"
+  declare -r jbr_tag="$(sed 's/^.*b//' "${sources_dir}/build.txt")"
 
   # Darwin lacks autoconf, install it for this build.
   install_autoconf "$autoconf_dir" "$out_path"
@@ -49,8 +53,9 @@ else
      PATH="$autoconf_dir/bin":$PATH bash +x "$sources_dir/configure" \
      "${quiet:+--quiet}" \
      --with-vendor-name="JetBrains s.r.o." \
-     --without-version-pre \
-     --with-version-opt="$jbr_tag-$build_number" \
+     --with-version-pre=$([ "$build_number" == "dev" ] && echo "dev" || echo "") \
+     --with-version-build=$(numeric_build_number $build_number) \
+     --with-version-opt="$jbr_tag" \
      --enable-cds=yes \
      --disable-full-docs \
      --with-freetype=bundled \
@@ -87,8 +92,6 @@ else
     zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . --exclude '*.diz'
     zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . --include '*.diz'
   )
-  cp "$build_dir"/build.log "$dist_dir"
-  cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
 fi
 
 

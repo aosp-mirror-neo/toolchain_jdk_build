@@ -18,6 +18,13 @@ function make_target_dir() {
 # Converts version string to comparable number `12.3` -> 012003000000. Works for at most 4 fields
 function ver { printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' '); }
 
+# Sanitize build number for `--with-version-opt` configure option
+# Remove all non numeric symbols, return `0` if input don't have any numbers in it
+function numeric_build_number {
+  local -r numbers=$(echo "$1" | tr -dc '[^0-9]')
+  echo ${numbers:-"0"}
+}
+
 # Installs autoconf into specified directory. The second argument is working directory.
 function install_autoconf() {
   local -r workdir=$(make_target_dir "$2")

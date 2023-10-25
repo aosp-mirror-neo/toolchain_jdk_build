@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# Builds JBR21
+# Builds JBR21 for Linux
 # Usage:
-#   build-jbr21-linux-x64.sh [-q]
+#   build-jbr_next-linux-x64.sh [-q]
 # The JDK is built in OUT_DIR (or "out" if unset).
 # The following artifacts are created in DIST_DIR (or "out/dist" if unset):
 #   jdk.zip              archive of the JDK distribution
@@ -12,8 +12,9 @@
 # Specify -q to suppress most of the output noise
 
 source $(dirname $0)/build-jetbrainsruntime-common.sh
-declare -r sources_dir="${top}/external/jetbrains/JetBrainsRuntime"
-declare -r boot_jdk=""
+
+declare -r sources_dir="$top/external/jetbrains/JetBrainsRuntime-next"
+declare -r boot_jdk="$top/prebuilts/jdk/studio/jbrjdk21/linux-x64"
 
 echo "Building Linux JDK......."
 echo "out_path=${out_path:-}"
@@ -87,8 +88,9 @@ else
    bash +x "$sources_dir/configure" \
         "${quiet:+--quiet}" \
         --with-vendor-name="JetBrains s.r.o." \
-        --without-version-pre \
-        --with-version-opt="$jbr_tag-$build_number" \
+        --with-version-pre=$([ "$build_number" == "dev" ] && echo "dev" || echo "") \
+        --with-version-build=$(numeric_build_number $build_number) \
+        --with-version-opt="$jbr_tag" \
         --enable-cds=yes \
         --disable-full-docs \
         --with-debug-level=release \
