@@ -46,7 +46,6 @@ make JOBS=1 LOG=debug -C "$build_dir" ${quiet:+-s} images
 )
 
 # Distribute jdk
-[[ -n "${dist_dir:-}" ]] || exit 0
 
 rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
 declare -r bundle_dir=$(find $build_dir/images/jdk-bundle/ -type d -depth 1 -name 'jdk-*.jdk')
@@ -61,7 +60,7 @@ cp "$build_dir"/configure-support/config.log "$dist_dir"/configure.log
 (
 cd "${build_dir}"
 
-# 1. add studio mudules to jb/project/tools/common/modules.list
+# 1. add studio modules to jb/project/tools/common/modules.list
 # 2. remove trailing comas, and remove duplicates
 # 3. trim, and convert lines to coma-separated list
 declare modules=$(

@@ -104,7 +104,7 @@ echo "Creating java runtime ...."
   runtime_image_dir=$(make_target_dir "image")
   unzip ${quiet:+-q} $dist_dir/jdk.zip -d $jbr_jdk_dir
 
-  # 1. add studio mudules to jb/project/tools/common/modules.list
+  # 1. add studio modules to jb/project/tools/common/modules.list
   # 2. remove trailing comas, and remove duplicates
   # 3. trim, and convert lines to coma-separated list
  declare modules=$(

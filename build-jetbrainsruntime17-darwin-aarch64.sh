@@ -82,7 +82,7 @@ echo "Dist done"
   mkdir -p  "${build_dir}/java-runtime"
   cd  "${build_dir}/java-runtime"
 
-  # 1. add studio mudules to jb/project/tools/common/modules.list
+  # 1. add studio modules to jb/project/tools/common/modules.list
   # 2. remove trailing comas, and remove duplicates
   # 3. remove modules non-applicable to aarch64
   # 4. trim, and convert lines to coma-separated list

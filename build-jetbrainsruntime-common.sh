@@ -76,10 +76,10 @@ if [ -z "${dist_dir_option:-}" ]; then
 fi
 
 # Create output directories
-declare -r out_path=$(make_target_dir "${out_dir_option}")
-declare -r dist_dir="$(make_target_dir "${dist_dir_option}")"
-declare -r build_dir="$out_path/build"
-declare -r top=$(realpath "$(dirname "$0")/../../..")
+declare out_path=$(make_target_dir "${out_dir_option}")
+declare dist_dir="$(make_target_dir "${dist_dir_option}")"
+declare build_dir="$out_path/build"
+declare top=$(realpath "$(dirname "$0")/../../..")
 declare -r autoconf_dir=$(make_target_dir "$out_path/autoconf")
 
 case $(uname) in
