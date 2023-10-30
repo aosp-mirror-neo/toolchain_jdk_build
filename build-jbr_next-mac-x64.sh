@@ -54,8 +54,8 @@ else
      "${quiet:+--quiet}" \
      --with-vendor-name="JetBrains s.r.o." \
      --with-version-pre=$([ "$build_number" == "dev" ] && echo "dev" || echo "") \
-     --with-version-build=$(numeric_build_number $build_number) \
-     --with-version-opt="$jbr_tag" \
+     --without-version-build \
+     --with-version-opt="$(numeric_build_number $build_number)-b$jbr_tag" \
      --enable-cds=yes \
      --disable-full-docs \
      --with-freetype=bundled \
