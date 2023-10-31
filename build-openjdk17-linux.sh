@@ -117,9 +117,9 @@ mkdir -p "$build_dir"
      --with-zlib=bundled \
      --x-libraries="$sysroot/usr/lib/x86_64-linux-gnu" \
      --x-includes="$sysroot/usr/include" \
-     --with-extra-cflags="--sysroot=$sysroot -fno-delete-null-pointer-checks" \
-     --with-extra-cxxflags="--sysroot=$sysroot -fno-delete-null-pointer-checks" \
-     --with-extra-ldflags="--sysroot=$sysroot -fuse-ld=lld" \
+     --with-extra-cflags="--sysroot=$sysroot -fno-delete-null-pointer-checks -flto=full" \
+     --with-extra-cxxflags="--sysroot=$sysroot -fno-delete-null-pointer-checks -flto=full" \
+     --with-extra-ldflags="--sysroot=$sysroot -fuse-ld=lld -flto=full" \
      AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
 )
 
