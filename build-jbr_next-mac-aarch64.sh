@@ -99,7 +99,7 @@ echo "Creating java runtime ...."
   cd  "${out_path}/java-runtime"
 
   jbr_jdk_dir=$(make_target_dir "jdk")
-  runtime_image_dir=$(make_target_dir "image")
+  runtime_image_dir="${out_path}/java-runtime/image"
   unzip ${quiet:+-q} $dist_dir/jdk.zip -d $jbr_jdk_dir
 
   # 1. add studio mudules to jb/project/tools/common/modules.list

@@ -79,7 +79,7 @@ echo "Creating java runtime ...."
   cd  "${out_path}/java-runtime"
 
   jbr_jdk_dir=$(make_target_dir "jdk")
-  runtime_image_dir=$(make_target_dir "image")
+  runtime_image_dir="${out_path}/java-runtime/image"
   unzip ${quiet:+-q} "${dist_dir}/jdk.zip" -d $jbr_jdk_dir
 
   # 1. add studio modules to jb/project/tools/common/modules.list
@@ -99,7 +99,7 @@ echo "Creating java runtime ...."
     --compress=zip-9 \
     --module-path="${jbr_jdk_dir}/jmods" \
     --add-modules ${modules} \
-    --output "${build_dir}/java-runtime"
+    --output "${runtime_image_dir}"
 
   grep -v "^JAVA_VERSION" "${jbr_jdk_dir}/release" | grep -v "^MODULES" >> "${runtime_image_dir}/release"
   cp "${runtime_image_dir}/release" "${dist_dir}"
