@@ -26,6 +26,8 @@ if [ -f "$dist_dir"/jdk.zip ]; then
   echo "Re-using existing JDK $dist_dir/jdk.zip"
 else
   declare -r jbr_tag="$(sed 's/^.*b//' "$sources_dir/build.txt")"
+  SOURCE_DATE_EPOCH=$(source_date_epoch $sources_dir)
+
   # Configure
   mkdir -p "$build_dir"
   [[ -n "${quiet:-}" ]] || set -x
@@ -35,6 +37,7 @@ else
     bash +x "$sources_dir/configure" \
      "${quiet:+--quiet}" \
      --with-vendor-name="JetBrains s.r.o." \
+     --with-vendor-vm-bug-url=https://youtrack.jetbrains.com/issues/JBR \
      --with-version-pre=$([ "$build_number" == "dev" ] && echo "dev" || echo "") \
      --without-version-build \
      --with-version-opt="$(numeric_build_number $build_number)-b$jbr_tag" \
@@ -42,6 +45,7 @@ else
      --enable-cds=yes \
      --disable-ccache \
      --disable-absolute-paths-in-output \
+     --with-build-user=builder \
      --disable-full-docs \
      --disable-warnings-as-errors \
      --with-boot-jdk="$boot_jdk" \
@@ -99,7 +103,7 @@ echo "Creating java runtime ...."
     --compress=zip-9 \
     --module-path="${jbr_jdk_dir}/jmods" \
     --add-modules ${modules} \
-    --output "${runtime_image_dir}"
+    --output "image"
 
   grep -v "^JAVA_VERSION" "${jbr_jdk_dir}/release" | grep -v "^MODULES" >> "${runtime_image_dir}/release"
   cp "${runtime_image_dir}/release" "${dist_dir}"

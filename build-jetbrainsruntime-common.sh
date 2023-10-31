@@ -36,6 +36,17 @@ function install_autoconf() {
   )
 }
 
+function source_date_epoch() {
+  cd $1
+  # https://htmlpreview.github.io/?https://raw.githubusercontent.com/openjdk/jdk/master/doc/building.html#reproducible-builds
+  # https://reproducible-builds.org/docs/source-date-epoch/
+  if source_timestamp=$(git log -1 --pretty=%ct); then
+   echo $source_timestamp
+  else
+   find . -type f -print0 | xargs -0 stat -f "%m %N" | sort -rn | head -1 | cut -f1 -w
+  fi
+}
+
 function usage() {
   declare -r prog="${0##*/}"
   cat <<EOF

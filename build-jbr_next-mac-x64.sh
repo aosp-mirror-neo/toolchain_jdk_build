@@ -43,6 +43,7 @@ if [ -f "${dist_dir}"/jdk.zip ]; then
   echo "Re-using existing JDK ${dist_dir}/jdk.zip"
 else
   declare -r jbr_tag="$(sed 's/^.*b//' "${sources_dir}/build.txt")"
+  SOURCE_DATE_EPOCH=$(source_date_epoch $sources_dir)
 
   # Darwin lacks autoconf, install it for this build.
   install_autoconf "$autoconf_dir" "$out_path"
@@ -53,11 +54,14 @@ else
      PATH="$autoconf_dir/bin":$PATH bash +x "$sources_dir/configure" \
      "${quiet:+--quiet}" \
      --with-vendor-name="JetBrains s.r.o." \
+     --with-vendor-vm-bug-url=https://youtrack.jetbrains.com/issues/JBR \
      --with-version-pre=$([ "$build_number" == "dev" ] && echo "dev" || echo "") \
      --without-version-build \
      --with-version-opt="$(numeric_build_number $build_number)-b$jbr_tag" \
      --enable-cds=yes \
      --disable-full-docs \
+     --disable-absolute-paths-in-output \
+     --with-build-user=builder \
      --with-freetype=bundled \
      --with-libpng=bundled \
      --with-zlib=bundled \
