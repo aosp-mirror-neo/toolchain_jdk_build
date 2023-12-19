@@ -85,7 +85,7 @@ mkdir -p "$build_dir"
      "${quiet:+--quiet}" \
      --disable-full-docs \
      --disable-warnings-as-errors \
-     --with-boot-jdk="$top/prebuilts/jdk/jdk21/darwin-x86/Contents/Home" \
+     --with-boot-jdk="$top/prebuilts/jdk/jdk21/darwin-x86" \
      --with-cups-include="$sysroot/usr/include" \
      --with-sysroot="$sysroot"\
      --with-freetype=bundled \
