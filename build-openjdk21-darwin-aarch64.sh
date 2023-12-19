@@ -61,11 +61,7 @@ declare -r out_path=$(make_target_dir "$1")
 declare -r sysroot=$(xcrun --show-sdk-path)
 declare -r build_dir="$out_path/build"
 declare -r top=$(realpath "$(dirname "$0")/../../..")
-declare -r clang_bin="$top/prebuilts/clang/host/darwin-x86/clang-r510928/bin"
 declare -r autoconf_dir=$(make_target_dir "$out_path/autoconf")
-
-# So that configure finds tools like dsymutil in ${clang_bin} instead of /usr/bin
-export PATH=${clang_bin}:$PATH
 
 # Darwin lacks autoconf, install it for this build.
 install_autoconf "$autoconf_dir" "$out_path"
@@ -94,12 +90,10 @@ mkdir -p "$build_dir"
      --with-native-debug-symbols=external \
      --with-stdc++lib=static \
      --with-toolchain-type=clang \
-     --with-tools-dir="$clang_bin" \
      --with-version-pre= \
      --with-version-opt=${BUILD_NUMBER:-0} \
      --with-vendor-version-string=Android_PDK \
-     --with-zlib=bundled \
-     AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
+     --with-zlib=bundled
 )
 
 # Make
