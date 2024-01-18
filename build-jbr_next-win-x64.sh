@@ -20,7 +20,7 @@ echo "top=${top:-}"
 echo "build_number=${build_number:-}"
 
 declare -r sources_dir="${top}/external/jetbrains/JetBrainsRuntime-next"
-declare -r boot_jdk="$top/prebuilts/jdk/studio/jbrjdk21/windows-x64"
+declare -r boot_jdk="$top/prebuilts/jdk/studio/jbr-next/win"
 
 if [ -f "$dist_dir"/jdk.zip ]; then
   echo "Re-using existing JDK $dist_dir/jdk.zip"

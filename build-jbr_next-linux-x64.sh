@@ -14,7 +14,7 @@
 source $(dirname $0)/build-jetbrainsruntime-common.sh
 
 declare -r sources_dir="$top/external/jetbrains/JetBrainsRuntime-next"
-declare -r boot_jdk="$top/prebuilts/jdk/studio/jbrjdk21/linux-x64"
+declare -r boot_jdk="$top/prebuilts/jdk/studio/jbr-next/linux"
 
 echo "Building Linux JDK......."
 echo "out_path=${out_path:-}"
