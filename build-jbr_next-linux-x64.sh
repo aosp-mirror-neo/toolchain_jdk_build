@@ -99,7 +99,6 @@ else
         --with-build-user=builder \
         --with-debug-level=release \
         --disable-jvm-feature-epsilongc \
-        --disable-jvm-feature-parallelgc \
         --disable-jvm-feature-shenandoahgc \
         --disable-jvm-feature-zgc \
         --disable-jvm-feature-dtrace \

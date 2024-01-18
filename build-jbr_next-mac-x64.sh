@@ -68,7 +68,6 @@ else
      --with-native-debug-symbols=zipped \
      --with-debug-level=release \
      --disable-jvm-feature-epsilongc \
-     --disable-jvm-feature-parallelgc \
      --disable-jvm-feature-shenandoahgc \
      --disable-jvm-feature-zgc \
      --disable-jvm-feature-dtrace \
