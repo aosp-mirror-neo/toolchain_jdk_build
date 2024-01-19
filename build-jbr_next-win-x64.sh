@@ -95,7 +95,7 @@ echo "Creating java runtime ...."
    | xargs | sed s/" "/,/g
  )
 
-  "${boot_jdk}/bin/jlink" \
+  "${jbr_jdk_dir}/bin/jlink" \
     --no-header-files \
     --no-man-pages \
     --strip-debug \
