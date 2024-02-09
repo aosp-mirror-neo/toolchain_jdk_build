@@ -27,7 +27,7 @@ function github_release_notes(){
   body=$(curl  --silent --show-error -L -H "X-GitHub-Api-Version: 2022-11-28"   https://api.github.com/repos/JetBrains/JetBrainsRuntime/releases/tags/$tag | grep '"body"' | sed 's/\\r\\n/\
 /g')
   # Trim reponse after `Binaries for developers`
-  release_notes="${body%Binaries for developers*}"
+  release_notes="${body%Binaries for launching IntelliJ*}"
   # Remove `---` at the end
   release_notes="${release_notes%---*}"
   # Remoce leading text before `Release tag`
@@ -44,8 +44,8 @@ if [[ "$JBR_TAG" =~ ^jbr-release-17\. ]]; then
   declare -r jbr_dir="$top/external/jetbrains/JetBrainsRuntime17"
   declare -r remote_branch="main17"
 elif [[ "$JBR_TAG" =~ ^jbr-release-21\. ]]; then
-  declare -r jbr_dir="$top/external/jetbrains/JetBrainsRuntime"
-  declare -r remote_branch="main"
+  declare -r jbr_dir="$top/external/jetbrains/JetBrainsRuntime-next"
+  declare -r remote_branch="main-next"
 else
   echo "Wanted 'jbr-release-17.*' or 'jbr-release-21.*' tag but got '$1'"
   exit 2
