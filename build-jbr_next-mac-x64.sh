@@ -109,10 +109,14 @@ echo "Creating java runtime ...."
 
   # 1. add studio modules to jb/project/tools/common/modules.list
   # 2. remove trailing comas, and remove duplicates
-  # 3. trim, and convert lines to coma-separated list
+  # 3. JBR-3398 JDK-8263327 Remove the Experimental AOT and JIT Compiler
+  # 4. trim, and convert lines to coma-separated list
  declare modules=$(
    cat ${sources_dir}/jb/project/tools/common/modules.list ${top}/toolchain/jdk/build/studio-modules.list \
    | sed s/","/" "/g | sort | uniq \
+   | grep -v 'jdk.aot' \
+   | grep -v 'jdk.internal.vm.compiler' \
+   | grep -v 'jdk.internal.vm.compiler.management' \
    | xargs | sed s/" "/,/g
  )
 
