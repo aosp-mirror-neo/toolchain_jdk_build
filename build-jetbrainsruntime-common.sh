@@ -95,11 +95,11 @@ declare -r autoconf_dir=$(make_target_dir "$out_path/autoconf")
 
 case $(uname) in
   Linux)
-    declare -r clang_bin="$top/prebuilts/clang/host/linux-x86/clang-r510928/bin"
+    declare -r clang_bin="$top/prebuilts/clang/host/linux-x86/clang-r522817/bin"
     declare -r sysroot="$out_path/sysroot"
     ;;
   Darwin)
-    declare -r clang_bin="$top/prebuilts/clang/host/darwin-x86/clang-r510928/bin"
+    declare -r clang_bin="$top/prebuilts/clang/host/darwin-x86/clang-stable/bin"
     declare -r sysroot=$(xcrun --show-sdk-path)
     ;;
   CYGWIN*) # Windows Cygwin
