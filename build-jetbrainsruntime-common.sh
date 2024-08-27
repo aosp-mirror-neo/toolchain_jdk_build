@@ -99,7 +99,7 @@ case $(uname) in
     declare -r sysroot="$out_path/sysroot"
     ;;
   Darwin)
-    declare -r clang_bin="$top/prebuilts/clang/host/darwin-x86/clang-stable/bin"
+    declare -r clang_bin="$top/prebuilts/clang/host/darwin-x86/clang-r487747c/bin"
     declare -r sysroot=$(xcrun --show-sdk-path)
     ;;
   CYGWIN*) # Windows Cygwin
