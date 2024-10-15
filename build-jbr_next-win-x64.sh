@@ -42,6 +42,7 @@ else
      --without-version-build \
      --with-version-opt="$(numeric_build_number $build_number)-b$jbr_tag" \
      --with-extra-path="/cygdrive/c/tools/cygwin/bin" \
+     --with-nvdacontrollerclient="$top/prebuilts/jdk/studio/nvda/stable" \
      --enable-cds=yes \
      --disable-ccache \
      --disable-absolute-paths-in-output \
