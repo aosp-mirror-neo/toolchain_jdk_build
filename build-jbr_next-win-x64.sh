@@ -70,6 +70,10 @@ else
     cd "$build_dir/images/jdk"
     rm -rf demo
     rm -rf man
+
+    mkdir -p legal/nvda
+    cp "$top/prebuilts/jdk/studio/nvda/stable/license.txt" ./legal/nvda/LICENSE
+
     zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . -x'*.diz'
     zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.diz'
   )
@@ -110,6 +114,9 @@ echo "Creating java runtime ...."
 
   grep -v "^JAVA_VERSION" "${jbr_jdk_dir}/release" | grep -v "^MODULES" >> "${runtime_image_dir}/release"
   cp "${runtime_image_dir}/release" "${dist_dir}"
+
+  mkdir -p "${runtime_image_dir}/legal/nvda"
+  cp "$top/prebuilts/jdk/studio/nvda/stable/license.txt" "${runtime_image_dir}/legal/nvda/LICENSE"
 
   cd ${runtime_image_dir}
   zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" .
