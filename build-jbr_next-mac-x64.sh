@@ -51,7 +51,7 @@ else
   # disable 'gnu-folding-constant' for SystemHotkey.m
   declare -r disable_compiler_warnings_flags="\
     -Wno-gnu-folding-constant \
-    "  
+    "
 
   # Configure
   mkdir -p "$build_dir"
@@ -81,8 +81,8 @@ else
      --with-stdc++lib=static \
      --with-toolchain-type=clang \
      --with-tools-dir="$clang_bin" \
-     --with-extra-cflags="$disable_compiler_warnings_flags" \
-     --with-extra-cxxflags="$disable_compiler_warnings_flags" \
+     --with-extra-cflags="$disable_compiler_warnings_flags -mmacosx-version-min=11.0" \
+     --with-extra-cxxflags="$disable_compiler_warnings_flags -mmacosx-version-min=11.0" \
      AR=llvm-ar NM=llvm-nm OBJDUMP=llvm-objdump STRIP=llvm-strip
   )
 
