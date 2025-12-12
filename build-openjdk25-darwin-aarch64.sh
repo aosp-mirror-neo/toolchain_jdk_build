@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 # Builds JDK25, optionally creating distribution artifacts for it.
+#
 # Usage:
 #   build_openjdk25-darwin-aarch64.sh [-q] [-d <dist_dir>] build_dir
 # The JDK is built in <build_dir>.
