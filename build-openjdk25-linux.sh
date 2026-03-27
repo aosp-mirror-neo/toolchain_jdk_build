@@ -40,11 +40,11 @@ done
 shift $(($OPTIND-1))
 (($#==1)) || usage
 
+declare -r top=$(realpath "$(dirname "$0")/../../..")
 declare -r out_path=$(make_target_dir "$1")
 declare -r sysroot="$out_path/sysroot"
 declare -r build_dir="$out_path/build"
-declare -r top=$(realpath "$(dirname "$0")/../../..")
-declare -r clang_bin="$top/prebuilts/clang/host/linux-x86/clang-r584948/bin"
+declare -r clang_bin="$top/prebuilts/clang/host/linux-x86/clang-r584948b/bin"
 
 # "Installs" given Debian packages into specified directory.
 function unpack_dependencies() {
@@ -102,7 +102,7 @@ mkdir -p "$build_dir"
      --with-alsa-lib="$sysroot/usr/lib/x86_64-linux-gnu" \
      --with-boot-jdk="$top/prebuilts/jdk/jdk25/linux-x86" \
      --with-cups-include="$sysroot/usr/include" \
-     --with-sysroot="$sysroot"\
+     --with-sysroot="$sysroot" \
      --with-freetype=system \
      --with-freetype-lib="$sysroot/usr/lib/x86_64-linux-gnu" \
      --with-freetype-include="$sysroot/usr/include/freetype2" \
@@ -120,7 +120,7 @@ mkdir -p "$build_dir"
      --with-extra-cflags="--sysroot=$sysroot -fno-delete-null-pointer-checks -flto=full" \
      --with-extra-cxxflags="--sysroot=$sysroot -fno-delete-null-pointer-checks -flto=full" \
      --with-extra-ldflags="--sysroot=$sysroot -fuse-ld=lld -flto=full" \
-     AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip
+     AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CXXFILT=llvm-cxxfilt
 )
 
 # Make
