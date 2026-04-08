@@ -47,6 +47,23 @@ function source_date_epoch() {
   fi
 }
 
+function verifyMacBinaryCpuArchitecture() {
+  declare -r binary=$1
+  declare -r expected_arch=$2
+
+  if [ ! -f "$binary" ]; then
+    echo "$binary does not exists"
+    exit 2
+  fi
+
+  declare -r archs=$(lipo -archs $binary)
+  echo "$binary archs: $archs"
+  if [[ ! "$archs" =~ "$expected_arch" ]]; then
+    echo "$binary doesn't have $expected_arch architecture "
+    exit 3
+  fi
+}
+
 function usage() {
   declare -r prog="${0##*/}"
   cat <<EOF
