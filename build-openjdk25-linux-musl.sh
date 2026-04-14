@@ -62,6 +62,7 @@ declare -r musl_sysroot="$top/prebuilts/build-tools/sysroots/${target}"
 declare -r sysroot="$out_path/sysroot"
 declare -r build_dir="$out_path/build"
 declare -r clang_bin="$top/prebuilts/clang/host/linux-${prebuilt_arch}/clang-r584948b/bin"
+declare -r autoconf_dir=$(make_target_dir "$out_path/autoconf")
 
 mkdir -p ${sysroot}
 cp -rp ${musl_sysroot}/* ${sysroot}/
@@ -88,8 +89,21 @@ function unpack_dependencies() {
   done
 }
 
+# Installs autoconf into specified directory. The second argument is working directory.
+function install_autoconf() {
+  local -r workdir=$(make_target_dir "$2")
+  local -r installdir=$(make_target_dir "$1")
+  tar -C "$workdir" -xzf ${top}/toolchain/jdk/deps/src/autoconf-2.69.tar.gz
+  (cd "$workdir"/autoconf-2.69 &&
+     M4=${top}/prebuilts/build-tools/linux-${prebuilt_arch}/bin/m4 \
+     ./configure --prefix="$installdir" ${quiet:+--quiet} &&
+     make ${quiet:+-s} install
+  )
+}
+
 # Prepare
 unpack_dependencies "$sysroot" $top/toolchain/jdk/deps/linux_musl_${deps_arch}/*.apk
+install_autoconf "$autoconf_dir" "$out_path"
 
 function dist_logs() {
     [[ -n "${dist_dir:-}" && -e "${build_dir}/build.log" ]] && cp "${build_dir}/build.log" "${dist_dir}/"
@@ -103,6 +117,7 @@ export LD_LIBRARY_PATH=$sysroot/lib
 mkdir -p "$build_dir"
 [[ -n "${quiet:-}" ]] || set -x
 (cd "$build_dir" &&
+   AUTOCONF=${autoconf_dir}/bin/autoconf \
    bash +x "$top/toolchain/jdk/jdk25/configure" \
      "${quiet:+--quiet}" \
      --build ${target} \
