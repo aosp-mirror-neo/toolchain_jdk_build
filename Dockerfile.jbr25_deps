@@ -1,0 +1,14 @@
+FROM ubuntu:20.04
+RUN sed -i '/deb-src/s/^# //' /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y \
+      binutils  \
+      xz-utils \
+      zip unzip \
+      bzip2 \
+      apt-rdepends \
+      wget
+
+ADD docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
