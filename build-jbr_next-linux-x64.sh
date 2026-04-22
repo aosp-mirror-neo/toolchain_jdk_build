@@ -115,7 +115,7 @@ else
         --x-libraries="$sysroot/usr/lib/x86_64-linux-gnu" \
         --x-includes="$sysroot/usr/include" \
         --with-native-debug-symbols=zipped \
-        --with-freetype-include="$top/external/jetbrains/JetBrainsRuntime17/src/java.desktop/share/native/libfreetype/include" \
+        --with-freetype-include="$top/external/jetbrains/JetBrainsRuntime-next/src/java.desktop/share/native/libfreetype/include" \
         --with-freetype-lib="$sysroot/usr/lib/x86_64-linux-gnu" \
         --with-freetype=system \
         --with-sysroot="$sysroot" \
