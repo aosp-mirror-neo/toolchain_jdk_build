@@ -15,7 +15,7 @@ source $(dirname $0)/build-jetbrainsruntime-common.sh
 
 declare -r sources_dir="$top/external/jetbrains/JetBrainsRuntime25"
 # TODO switch to JBR as boot jdk
-declare -r boot_jdk="$top/prebuilts/jdk/jdk25/linux-x86/"
+declare -r boot_jdk="$top/prebuilts/jdk/studio/jbr25/linux/"
 declare -r build_deps="$top/toolchain/jdk/deps/jbr25/linux_x64"
 
 echo "Building Linux JDK......."

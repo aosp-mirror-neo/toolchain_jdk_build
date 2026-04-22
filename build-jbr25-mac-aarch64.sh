@@ -14,7 +14,7 @@
 source $(dirname $0)/build-jetbrainsruntime-common.sh
 
 declare -r sources_dir="${top}/external/jetbrains/JetBrainsRuntime25"
-declare -r boot_jdk="${top}/prebuilts/jdk/jdk25/darwin-arm64/"
+declare -r boot_jdk="${top}/prebuilts/jdk/studio/jbr25/mac-arm64/Contents/Home/"
 
 echo "Building Mac JDK......."
 echo "out_path=${out_path:-}"
