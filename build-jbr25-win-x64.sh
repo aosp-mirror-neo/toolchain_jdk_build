@@ -122,4 +122,17 @@ echo "Creating java runtime ...."
   echo "Java Runtime Done"
 )
 
+echo "Testing java runtime ...."
+(
+  runtime_image_dir="${out_path}/java-runtime/image"
+  test_src=$(cygpath -m "${top}/toolchain/jdk/build/tests/TestAwt.java")
+  test_out=$("${runtime_image_dir}/bin/java" "${test_src}")
+  echo "${test_out}"
+  if [[ "${test_out}" != *"success"* ]]; then
+    echo "TestAwt failed: unexpected output '${test_out}'"
+    exit 1
+  fi
+  echo "Java Test Done"
+)
+
 echo "All Done!"
