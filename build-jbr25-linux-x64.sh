@@ -149,6 +149,7 @@ else
 				--with-alsa-lib="$sysroot/usr/lib/x86_64-linux-gnu" \
 				--with-cups-include="$sysroot/usr/include" \
 				--with-wayland-protocols="$sysroot/usr/share/wayland-protocols" \
+				--with-dbus-includes="$sysroot/usr/include/dbus-1.0 $sysroot/usr/lib/x86_64-linux-gnu/dbus-1.0/include" \
 				--with-extra-cflags="--sysroot=$sysroot" \
 				--with-extra-cxxflags="--sysroot=$sysroot" \
 				--with-extra-ldflags="--sysroot=$sysroot" \
