@@ -157,8 +157,9 @@ make -C "$build_dir" LOG=${make_log_level:-debug} ${quiet:+-s} images \
 
 # Add musl libc to the output directory
 cp "${sysroot}/lib/libc_musl.so" "$build_dir/images/jdk/lib/"
+cp "${sysroot}/lib/libjemalloc5.so" "$build_dir/images/jdk/lib/"
 mkdir -p "$build_dir/images/jdk/legal/musl/"
-cp -P ${sysroot}/NOTICE* ${sysroot}/LICENSE* ${sysroot}/COPYRIGHT* "$build_dir/images/jdk/legal/musl/"
+cp ${sysroot}/LICENSE "$build_dir/images/jdk/legal/musl/"
 
 [[ -n "${dist_dir:-}" ]] || exit 0
 
