@@ -17,7 +17,7 @@ All build scripts reside in `toolchain/jdk/build/` and accept common flags parse
 | `linux-x86_64` | `build-jbr25-linux-x64.sh` | Native (`x86_64` host) | `glibc` 2.19 | Ubuntu 20.04 amd64 debs (`deps/jbr25/linux_x64`) + Ubuntu 14.04 `libc6`/`libgcc`/`libstdc++` overlay (`deps/`) |
 | `linux-aarch64` (glibc) | `build-jbr25-linux-aarch64.sh` | Cross (`x86_64` host) | `glibc` 2.31 (symbols $\le$ `2.29`) | Ubuntu 20.04 arm64 debs (`deps/jbr25/linux_arm64`) |
 | `linux-musl-aarch64-headless` (musl, headless-only) | `build-jbr25-linux-musl-aarch64-headless.sh` | Cross (`x86_64` host) | `musl` 1.2.6, shipped in `lib/` | `prebuilts/build-tools/sysroots/aarch64-unknown-linux-musl` + Alpine 3.23 aarch64 apks (`deps/jbr25/linux_musl_arm64_headless`) |
-| `mac-x64` | `build-jbr25-mac-x64.sh` | Native (`x86_64` macOS) | macOS SDK | Xcode macOS SDK |
+| `mac-x64` | `build-jbr25-mac-x64.sh` | Cross (`arm64` macOS host, `--openjdk-target=x86_64-apple-darwin`) | macOS SDK | Xcode macOS SDK |
 | `mac-aarch64` | `build-jbr25-mac-aarch64.sh` | Native (`arm64` macOS) | macOS SDK | Xcode macOS SDK |
 | `win-x64` | `build-jbr25-win-x64.{sh,cmd}` | Native (`x86_64` Windows) | MSVC CRT | Visual Studio toolchain (`x64`) |
 | `win-aarch64` | `build-jbr25-win-aarch64.{sh,cmd}` | Cross (`x86_64` Windows) or Native (`arm64` Windows) | MSVC CRT | Visual Studio toolchain (`Hostx64/arm64`) |
@@ -131,6 +131,8 @@ To make classlist generation deterministic and independent of host X11 state:
 
 ### 4.6 CDS Archive Generation in Cross-Builds
 Default CDS archive dumping (`--generate-cds-archive`) is automatically disabled when cross-compiling (`checking if CDS archive is available... no (not possible with cross compilation)`) because dumping a shared archive requires executing the target `aarch64` JVM binary on the build host. Passing `--enable-jvm-feature-cds` to `configure` is still required so the compiled JVM supports CDS at runtime.
+
+`configure` decides "cross" by comparing `--openjdk-target` with the autoconf-guessed build triple, which on macOS carries the kernel version (`aarch64-apple-darwin24.6.0`). The native mac-aarch64 build used to pass `--openjdk-target=aarch64-apple-darwin` and was classified as a cross build (`COMPILE_TYPE='cross'` in `config.log`): no default CDS archives in the JDK image, and an interim build JDK compiled for nothing. It no longer passes the flag; `verifyMacBinaryCpuArchitecture` guards the architecture. mac-x64 is a genuine cross build: the CI hosts are arm64 Macs and its boot JDK is the `mac-arm64` JBR.
 
 ### 4.7 musl Specifics (`build-jbr25-linux-musl-aarch64-headless.sh`)
 The headless musl build follows `build-openjdk25-linux-musl.sh`, the musl JDK used by the Android platform build, with the JBR configuration of the other scripts. It exists for the Android CLI tools, which run the JVM with `-Djava.awt.headless=true` and `jlink` their own runtime from the JDK's `jmods` (`tools/vendor/google/cli/jbinary` in `studio-main`), and must not depend on the host's libc or desktop libraries.

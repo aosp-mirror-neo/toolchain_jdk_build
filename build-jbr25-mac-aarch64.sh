@@ -61,11 +61,16 @@ else
   # Configure
   #   Android Studio have macos 12.0 as a minimum requirement, but using that in mmacosx-version-min result in linkage error (bacause of "old" Xcode ??)
   #   so use 11.0 in build script for now
+  #
+  #   No --openjdk-target: this is a native build on an arm64 Mac. Passing the
+  #   target explicitly made configure compare it against the guessed build
+  #   triple, which carries the kernel version (aarch64-apple-darwin24.6.0), and
+  #   treat the build as a cross build: no default CDS archive in the JDK image
+  #   and an interim build JDK compiled for nothing.
   mkdir -p "$build_dir"
   (cd "$build_dir" &&
      PATH="$autoconf_dir/bin":$PATH bash +x "$sources_dir/configure" \
      "${quiet:+--quiet}" \
-     --openjdk-target=aarch64-apple-darwin \
      --with-vendor-name="JetBrains s.r.o." \
      --with-vendor-vm-bug-url=https://youtrack.jetbrains.com/issues/JBR \
      --with-version-pre=$([ "$build_number" == "dev" ] && echo "dev" || echo "") \
