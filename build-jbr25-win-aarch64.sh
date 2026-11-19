@@ -32,6 +32,14 @@ echo "build_number=${build_number:-}"
 declare -r sources_dir="${top}/external/jetbrains/JetBrainsRuntime25"
 declare -r boot_jdk="$top/prebuilts/jdk/studio/jbr25/win"
 
+# The produced image can only be executed (TestAwt.java) when this runs on an
+# ARM64 Windows host; on the x64 CI hosts it is a cross build.
+if [[ "$(uname -m)" =~ ^(aarch64|arm64)$ ]] || [[ "${PROCESSOR_ARCHITECTURE:-}" == "ARM64" ]] || [[ "${PROCESSOR_ARCHITEW6432:-}" == "ARM64" ]]; then
+  declare -r native_build=t
+else
+  declare -r native_build=
+fi
+
 if [ -f "$dist_dir"/jdk.zip ]; then
   echo "Re-using existing JDK $dist_dir/jdk.zip"
 else
@@ -130,27 +138,15 @@ echo "Creating java runtime ...."
   cp "$top/prebuilts/jdk/studio/nvda/stable/license.txt" "${runtime_image_dir}/legal/nvda/LICENSE"
 
   verifyWindowsImageCpuArchitecture "${runtime_image_dir}" "ARM64|Aarch64"
+  if [[ -n "$native_build" ]]; then
+    runJavaSmokeTest "${runtime_image_dir}"
+  else
+    echo "Skipping TestAwt.java on $(uname -m) build host (cross-compiled target is aarch64)"
+  fi
 
   cd ${runtime_image_dir}
   zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" .
   echo "Java Runtime Done"
 )
-
-if [[ "$(uname -m)" =~ ^(aarch64|arm64)$ ]] || [[ "${PROCESSOR_ARCHITECTURE:-}" == "ARM64" ]] || [[ "${PROCESSOR_ARCHITEW6432:-}" == "ARM64" ]]; then
-  echo "Testing java runtime ...."
-  (
-    runtime_image_dir="${out_path}/java-runtime/image"
-    test_src=$(cygpath -m "${top}/toolchain/jdk/build/tests/TestAwt.java")
-    test_out=$("${runtime_image_dir}/bin/java" "${test_src}")
-    echo "${test_out}"
-    if [[ "${test_out}" != *"success"* ]]; then
-      echo "TestAwt failed: unexpected output '${test_out}'"
-      exit 1
-    fi
-    echo "Java Test Done"
-  )
-else
-  echo "Skipping TestAwt.java execution on $(uname -m) build host (cross-compiled target is aarch64)"
-fi
 
 echo "All Done!"

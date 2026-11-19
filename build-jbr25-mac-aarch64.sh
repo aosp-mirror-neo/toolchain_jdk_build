@@ -105,6 +105,9 @@ else
 
   rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
   declare -r bundle_dir=$(find $build_dir/images/jdk-bundle/ -type d -depth 1 -name 'jdk-*.jdk')
+  verifyMacBinaryCpuArchitecture "$bundle_dir/Contents/Home/bin/java" "arm64"
+  verifyCdsArchives "$bundle_dir/Contents/Home"
+  runJavaSmokeTest "$bundle_dir/Contents/Home" -Djava.awt.headless=true
   (
     cd "$bundle_dir"
     rm -rf Contents/Home/demo
@@ -147,6 +150,7 @@ echo "Creating java runtime ...."
 
 
   verifyMacBinaryCpuArchitecture "${runtime_image_dir}/Contents/Home/bin/java" "arm64"
+  runJavaSmokeTest "${runtime_image_dir}/Contents/Home" -Djava.awt.headless=true
 
   grep -v "^JAVA_VERSION" "${jbr_jdk_dir}/Contents/Home/release" | grep -v "^MODULES" >> "${runtime_image_dir}/Contents/Home/release"
   cp "${runtime_image_dir}/Contents/Home/release" "${dist_dir}"

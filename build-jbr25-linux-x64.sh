@@ -148,6 +148,9 @@ else
 
 	bundleLinuxLibraries "$build_dir/images/jdk" "$sysroot" "$sysroot/usr/lib/x86_64-linux-gnu" "X86-64"
 	verifyLinuxSharedLibraryDependencies "$build_dir/images/jdk" "$linux_target_system_libraries"
+	verifyMaxGlibcSymbolVersion "$build_dir/images/jdk" "$studio_min_glibc_version"
+	verifyCdsArchives "$build_dir/images/jdk"
+	runJavaSmokeTest "$build_dir/images/jdk" -Djava.awt.headless=true
 
 	rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
 	(
@@ -192,6 +195,8 @@ echo "Creating java runtime ...."
 
 	copyBundledLinuxLibraries "${jbr_jdk_dir}" "${runtime_image_dir}"
 	verifyLinuxSharedLibraryDependencies "${runtime_image_dir}" "$linux_target_system_libraries"
+	verifyMaxGlibcSymbolVersion "${runtime_image_dir}" "$studio_min_glibc_version"
+	runJavaSmokeTest "${runtime_image_dir}" -Djava.awt.headless=true
 
 	grep -v "^JAVA_VERSION" "${jbr_jdk_dir}/release" | grep -v "^MODULES" >>"${runtime_image_dir}/release"
 	cp "${runtime_image_dir}/release" "${dist_dir}"

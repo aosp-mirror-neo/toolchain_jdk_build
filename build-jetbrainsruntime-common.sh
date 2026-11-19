@@ -51,6 +51,11 @@ declare -r linux_bundled_library_packages="
   libxtst6
 "
 
+# glibc version the Linux images must still run on: the Android Studio system
+# requirement (https://developer.android.com/studio/install). The images may
+# need less (the x64 build links against 2.19), never more.
+declare -r studio_min_glibc_version=2.31
+
 # Creates the directory if it does not exist and returns its absolute path
 function make_target_dir() {
   mkdir -p "$1" && realpath "$1"
@@ -371,6 +376,92 @@ function copyBundledLinuxLibraries() {
     cp "$jdk_image/lib/$lib" "$runtime_image/lib/$lib"
   done
   cp -r "$jdk_image/legal/bundled-libraries" "$runtime_image/legal/"
+}
+
+# Runs <home>/bin/java with a clean JVM environment. _JAVA_OPTIONS,
+# JAVA_TOOL_OPTIONS, JDK_JAVA_OPTIONS and CLASSPATH would otherwise leak build
+# host settings into the smoke tests.
+#   $1 image home (the directory containing bin/java), then java arguments
+function image_java() {
+  local -r home=$1
+  shift
+  env -u _JAVA_OPTIONS -u JAVA_TOOL_OPTIONS -u JDK_JAVA_OPTIONS -u CLASSPATH \
+    "$home/bin/java" "$@"
+}
+
+# Flag combinations whose default CDS archive the native JDK images are checked
+# for, as "<flags>" strings. The JVM maps the archive matching its flags at
+# startup: classes.jsa for plain launches, classes_coh.jsa for Studio, which
+# runs with -XX:+UseCompactObjectHeaders.
+declare -r cds_archive_flags="
+  -XX:-UseCompactObjectHeaders
+  -XX:+UseCompactObjectHeaders
+"
+
+# Fails unless the JVM in the image starts with class data sharing from each
+# default archive in $cds_archive_flags, i.e. the archives make produced match
+# this image.
+#   $1 image home
+function verifyCdsArchives() {
+  local -r home=$1
+  local flags
+  while read -r flags; do
+    [[ -n "$flags" ]] || continue
+    if ! image_java "$home" -Xshare:on $flags -version >/dev/null 2>&1; then
+      echo "$home: no usable default CDS archive for '$flags'"
+      exit 5
+    fi
+  done <<<"$cds_archive_flags"
+  echo "$home: default CDS archives verified"
+}
+
+# Runs the image on the build host: java -version and tests/TestAwt.java,
+# which initializes the AWT toolkit and so loads libawt and the toolkit
+# library. Further arguments are passed to java for the test, e.g.
+# -Djava.awt.headless=true on builders without a display. Only native builds
+# can call this.
+#   $1 image home, then java options for TestAwt
+function runJavaSmokeTest() {
+  local -r home=$1
+  shift
+  local test_src="$top/toolchain/jdk/build/tests/TestAwt.java"
+  local out
+  case $(uname) in
+    CYGWIN*) test_src=$(cygpath -m "$test_src") ;;
+  esac
+  image_java "$home" -version
+  out=$(image_java "$home" "$@" "$test_src")
+  if [[ "$out" != *success* ]]; then
+    echo "TestAwt failed on $home: '$out'"
+    exit 5
+  fi
+  echo "$home: smoke test passed"
+}
+
+# Fails if any ELF file in the image requires a glibc symbol version newer
+# than the given one, so a dependency or toolchain change cannot silently raise
+# the glibc version an image needs.
+#   $1 image, $2 highest allowed glibc version, e.g. 2.31
+function verifyMaxGlibcSymbolVersion() {
+  local -r image=$1
+  local -r max_allowed=$2
+  local -r readelf="$clang_bin/llvm-readelf"
+  local file max_found violations=""
+  while IFS= read -r -d '' file; do
+    [[ "$(head -c 4 "$file" | tr -d '\0')" == $'\x7fELF' ]] || continue
+    max_found=$("$readelf" --dyn-syms "$file" |
+      { grep -o 'GLIBC_[0-9][0-9.]*' || true; } | sed 's/^GLIBC_//' | sort -uV | tail -1)
+    [[ -n "$max_found" ]] || continue
+    if [[ "$(printf '%s\n' "$max_found" "$max_allowed" | sort -V | tail -1)" != "$max_allowed" ]]; then
+      violations+="${file#$image/}: GLIBC_$max_found"$'\n'
+    fi
+  done < <(find "$image" -type f -print0)
+  if [[ -n "$violations" ]]; then
+    echo "$image needs glibc symbol versions newer than GLIBC_$max_allowed:"
+    printf "%s" "$violations"
+    exit 6
+  fi
+  echo "$image: all glibc symbol versions are GLIBC_$max_allowed or older"
 }
 
 function usage() {

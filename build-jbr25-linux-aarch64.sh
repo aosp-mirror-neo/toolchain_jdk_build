@@ -244,6 +244,7 @@ EOF
 
 	bundleLinuxLibraries "$build_dir/images/jdk" "$sysroot" "$sysroot/usr/lib/aarch64-linux-gnu" "AArch64"
 	verifyLinuxSharedLibraryDependencies "$build_dir/images/jdk" "$linux_target_system_libraries"
+	verifyMaxGlibcSymbolVersion "$build_dir/images/jdk" "$studio_min_glibc_version"
 
 	rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
 	(
@@ -300,6 +301,7 @@ echo "Creating java runtime ...."
 
 	copyBundledLinuxLibraries "${jbr_jdk_dir}" "${runtime_image_dir}"
 	verifyLinuxSharedLibraryDependencies "${runtime_image_dir}" "$linux_target_system_libraries"
+	verifyMaxGlibcSymbolVersion "${runtime_image_dir}" "$studio_min_glibc_version"
 
 	grep -v "^JAVA_VERSION" "${jbr_jdk_dir}/release" | grep -v "^MODULES" >>"${runtime_image_dir}/release"
 	cp "${runtime_image_dir}/release" "${dist_dir}"

@@ -84,6 +84,8 @@ else
     cp "$top/prebuilts/jdk/studio/nvda/stable/license.txt" ./legal/nvda/LICENSE
 
     verifyWindowsImageCpuArchitecture "$build_dir/images/jdk" "x86-64"
+    verifyCdsArchives "$build_dir/images/jdk"
+    runJavaSmokeTest "$build_dir/images/jdk"
 
     zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . -x'*.diz'
     zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.diz'
@@ -128,23 +130,11 @@ echo "Creating java runtime ...."
   cp "$top/prebuilts/jdk/studio/nvda/stable/license.txt" "${runtime_image_dir}/legal/nvda/LICENSE"
 
   verifyWindowsImageCpuArchitecture "${runtime_image_dir}" "x86-64"
+  runJavaSmokeTest "${runtime_image_dir}"
 
   cd ${runtime_image_dir}
   zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" .
   echo "Java Runtime Done"
-)
-
-echo "Testing java runtime ...."
-(
-  runtime_image_dir="${out_path}/java-runtime/image"
-  test_src=$(cygpath -m "${top}/toolchain/jdk/build/tests/TestAwt.java")
-  test_out=$("${runtime_image_dir}/bin/java" "${test_src}")
-  echo "${test_out}"
-  if [[ "${test_out}" != *"success"* ]]; then
-    echo "TestAwt failed: unexpected output '${test_out}'"
-    exit 1
-  fi
-  echo "Java Test Done"
 )
 
 # Temporary (b/573307176): run the aarch64 cross build during the x64 CI job

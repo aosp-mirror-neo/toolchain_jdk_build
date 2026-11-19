@@ -27,6 +27,21 @@ Each build produces three primary archives in `<dist_dir>`:
 2. `jdk-debuginfo.zip`: Zip archive containing all `.diz` symbol files from `images/jdk`.
 3. `jdk-runtime.zip`: Stripped JRE runtime image created via `jlink` using the module list combined from `jb/project/tools/common/modules.list` and `toolchain/jdk/build/studio-modules.list` (excluding deprecated experimental AOT/JIT compiler modules `jdk.aot`, `jdk.internal.vm.compiler`, and `jdk.internal.vm.compiler.management`).
 
+### Post-build checks
+
+Every script checks what can be checked without running the image; the native builds additionally run it (`runJavaSmokeTest`). A failing check fails the build.
+
+| Check | Helper | linux-x64 | linux-aarch64 | musl headless | mac-aarch64 | mac-x64 | win-x64 | win-aarch64 |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Every `DT_NEEDED` resolves inside the image or to a listed system library | `verifyLinuxSharedLibraryDependencies` | yes | yes | yes | | | | |
+| No glibc symbol version above the Android Studio requirement (2.31) | `verifyMaxGlibcSymbolVersion` | yes | yes | | | | | |
+| CPU architecture of the binaries | `verifyLinuxBinaryCpuArchitecture`, `verifyMacBinaryCpuArchitecture`, `verifyWindowsImageCpuArchitecture` | bundled libs | yes | yes | `bin/java` | `bin/java` | all PE files | all PE files |
+| Headless-only image | `verifyHeadlessImage` | | | yes | | | | |
+| `java -version` and `TestAwt.java` | `runJavaSmokeTest` | JDK + runtime (headless) | | | JDK + runtime (headless) | | JDK + runtime | runtime, on ARM64 hosts only |
+| Default CDS archives map (`-Xshare:on`) | `verifyCdsArchives` | JDK image | | | JDK image | | JDK image | |
+
+The cross builds (linux-aarch64, musl, mac-x64, which is built on arm64 Macs, and win-aarch64 on the x64 CI hosts) cannot execute what they produce, so their images are not smoke tested on the build host; their JDK images also have no default CDS archives (section 4.6).
+
 ---
 
 ## 2. Hermeticity Policy
@@ -130,7 +145,7 @@ To make classlist generation deterministic and independent of host X11 state:
 ```
 
 ### 4.6 CDS Archive Generation in Cross-Builds
-Default CDS archive dumping (`--generate-cds-archive`) is automatically disabled when cross-compiling (`checking if CDS archive is available... no (not possible with cross compilation)`) because dumping a shared archive requires executing the target `aarch64` JVM binary on the build host. Passing `--enable-jvm-feature-cds` to `configure` is still required so the compiled JVM supports CDS at runtime.
+Default CDS archive dumping (`--generate-cds-archive`) is automatically disabled when cross-compiling (`checking if CDS archive is available... no (not possible with cross compilation)`) because dumping a shared archive requires executing the target `aarch64` JVM binary on the build host. Passing `--enable-jvm-feature-cds` to `configure` is still required so the compiled JVM supports CDS at runtime. The cross-built JDK images therefore ship without default CDS archives (`lib/server/classes*.jsa`). The runtime images of all targets ship without them as well: `jlink` builds them from `jmods`, which carry no archive, so every JVM started from a runtime image loads the boot classes from `lib/modules`.
 
 `configure` decides "cross" by comparing `--openjdk-target` with the autoconf-guessed build triple, which on macOS carries the kernel version (`aarch64-apple-darwin24.6.0`). The native mac-aarch64 build used to pass `--openjdk-target=aarch64-apple-darwin` and was classified as a cross build (`COMPILE_TYPE='cross'` in `config.log`): no default CDS archives in the JDK image, and an interim build JDK compiled for nothing. It no longer passes the flag; `verifyMacBinaryCpuArchitecture` guards the architecture. mac-x64 is a genuine cross build: the CI hosts are arm64 Macs and its boot JDK is the `mac-arm64` JBR.
 
