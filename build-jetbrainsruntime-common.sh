@@ -464,6 +464,54 @@ function verifyMaxGlibcSymbolVersion() {
   echo "$image: all glibc symbol versions are GLIBC_$max_allowed or older"
 }
 
+# Zips a directory so that the archive depends only on the directory's
+# content: file timestamps are first set to the given time (zip stores them,
+# in local time, hence UTC), entries are added in sorted order rather than in
+# directory order, and the Unix extra fields (uid, gid, access time) are left
+# out. Symlinks are stored as symlinks. An existing archive is replaced, not
+# updated.
+#   $1 directory, $2 archive, $3 timestamp for every entry (seconds since the
+#   epoch; the scripts pass SOURCE_DATE_EPOCH), then zip selection options such
+#   as -x '*.diz'
+function zip_image() {
+  local -r dir=$1
+  local -r archive=$2
+  local -r mtime=$3
+  shift 3
+  case $(uname) in
+    Darwin)
+      TZ=UTC find "$dir" -exec touch -h -t "$(date -u -r "$mtime" +%Y%m%d%H%M.%S)" {} +
+      ;;
+    *)
+      find "$dir" -exec touch -h -d "@$mtime" {} +
+      ;;
+  esac
+  rm -f "$archive"
+  (
+    cd "$dir" &&
+      find . \( -type f -o -type l \) | LC_ALL=C sort |
+      TZ=UTC zip -X -9 -y -D ${quiet:+-q} -@ "$archive" "$@"
+  )
+}
+
+# make packs each .debuginfo file into its .diz archive with plain zip, which
+# records the file's build-time mtime, so two builds never agree on the .diz
+# files even when the debug info itself is identical. Re-creates them with
+# zip_image.
+#   $1 image, $2 timestamp for the entries (see zip_image)
+function normalize_diz_archives() {
+  local -r image=$1
+  local -r mtime=$2
+  local -r tmp=$(mktemp -d)
+  local diz
+  while IFS= read -r -d '' diz; do
+    rm -rf "$tmp/diz" && mkdir "$tmp/diz"
+    unzip -q "$diz" -d "$tmp/diz"
+    zip_image "$tmp/diz" "$diz" "$mtime"
+  done < <(find "$image" -type f -name '*.diz' -print0)
+  rm -rf "$tmp"
+}
+
 function usage() {
   declare -r prog="${0##*/}"
   cat <<EOF

@@ -49,11 +49,12 @@ function dist_logs() {
 }
 trap dist_logs EXIT
 
+export SOURCE_DATE_EPOCH=$(source_date_epoch $sources_dir)
+
 if [ -f "${dist_dir}"/jdk.zip ]; then
   echo "Re-using existing JDK ${dist_dir}/jdk.zip"
 else
   declare -r jbr_tag="$(sed 's/^.*b//' "${sources_dir}/build.txt")"
-  export SOURCE_DATE_EPOCH=$(source_date_epoch $sources_dir)
 
   # Darwin lacks autoconf, install it for this build.
   install_autoconf "$autoconf_dir" "$out_path"
@@ -87,8 +88,8 @@ else
      --with-sysroot="$sysroot" \
      --with-stdc++lib=static \
      --with-toolchain-type=clang \
-     --with-extra-cflags="-mmacosx-version-min=11.0" \
-     --with-extra-cxxflags="-mmacosx-version-min=11.0"
+     --with-extra-cflags="-mmacosx-version-min=11.0 -ffile-prefix-map=$out_path/=" \
+     --with-extra-cxxflags="-mmacosx-version-min=11.0 -ffile-prefix-map=$out_path/="
   )
 
   echo "Configure done"
@@ -100,13 +101,10 @@ else
 
   rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
   declare -r bundle_dir=$(find $build_dir/images/jdk-bundle/ -type d -depth 1 -name 'jdk-*.jdk')
-  (
-    cd "$bundle_dir"
-    rm -rf Contents/Home/demo
-    rm -rf Contents/Home/man
-    zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . --exclude '*.diz'
-    zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . --include '*.diz'
-  )
+  rm -rf "$bundle_dir/Contents/Home/demo" "$bundle_dir/Contents/Home/man"
+  normalize_diz_archives "$bundle_dir" "$SOURCE_DATE_EPOCH"
+  zip_image "$bundle_dir" "$dist_dir/jdk.zip" "$SOURCE_DATE_EPOCH" -x '*.diz'
+  zip_image "$bundle_dir" "$dist_dir/jdk-debuginfo.zip" "$SOURCE_DATE_EPOCH" -i '*.diz'
 fi
 
 echo "Creating java runtime ...."
@@ -149,8 +147,7 @@ echo "Creating java runtime ...."
   ditto ${jbr_jdk_dir}/Contents/MacOS ${runtime_image_dir}/Contents/MacOS
   ditto ${jbr_jdk_dir}/Contents/Info.plist ${runtime_image_dir}/Contents/Info.plist
 
-  cd ${runtime_image_dir}
-  zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" .
+  zip_image "${runtime_image_dir}" "${dist_dir}/jdk-runtime.zip" "$SOURCE_DATE_EPOCH"
   echo "Java Runtime Done"
 )
 

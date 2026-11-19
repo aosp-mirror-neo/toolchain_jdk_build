@@ -43,11 +43,12 @@ function dist_logs() {
 }
 trap dist_logs EXIT
 
+export SOURCE_DATE_EPOCH=$(source_date_epoch $sources_dir)
+
 if [ -f "$dist_dir"/jdk.zip ]; then
 	echo "Re-using existing JDK $dist_dir/jdk.zip"
 else
 	declare -r jbr_tag="$(sed 's/^.*b//' "$sources_dir/build.txt")"
-	export SOURCE_DATE_EPOCH=$(source_date_epoch $sources_dir)
 
 	# Most of dependencies are from Ubuntu 20.04
 	# see download-deps-jbr25-x64.sh and Dockerfile.jbr25_deps
@@ -134,8 +135,8 @@ else
 				--with-vulkan \
 				--with-vulkan-include="$vulkan_headers/include" \
 				--with-vulkan-shader-compiler=glslangValidator \
-				--with-extra-cflags="--sysroot=$sysroot" \
-				--with-extra-cxxflags="--sysroot=$sysroot" \
+				--with-extra-cflags="--sysroot=$sysroot -ffile-prefix-map=$out_path/=" \
+				--with-extra-cxxflags="--sysroot=$sysroot -ffile-prefix-map=$out_path/=" \
 				--with-extra-ldflags="--sysroot=$sysroot" \
 				AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CXXFILT=llvm-cxxfilt WAYLAND_SCANNER="$sysroot/usr/bin/wayland-scanner"
 	)
@@ -153,13 +154,10 @@ else
 	runJavaSmokeTest "$build_dir/images/jdk" -Djava.awt.headless=true
 
 	rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
-	(
-		cd "$build_dir/images/jdk"
-		rm -rf demo
-		rm -rf man
-		zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . -x'*.diz'
-		zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.diz'
-	)
+	rm -rf "$build_dir/images/jdk/demo" "$build_dir/images/jdk/man"
+	normalize_diz_archives "$build_dir/images/jdk" "$SOURCE_DATE_EPOCH"
+	zip_image "$build_dir/images/jdk" "$dist_dir/jdk.zip" "$SOURCE_DATE_EPOCH" -x '*.diz'
+	zip_image "$build_dir/images/jdk" "$dist_dir/jdk-debuginfo.zip" "$SOURCE_DATE_EPOCH" -i '*.diz'
 fi
 
 echo "Creating java runtime ...."
@@ -201,8 +199,7 @@ echo "Creating java runtime ...."
 	grep -v "^JAVA_VERSION" "${jbr_jdk_dir}/release" | grep -v "^MODULES" >>"${runtime_image_dir}/release"
 	cp "${runtime_image_dir}/release" "${dist_dir}"
 
-	cd ${runtime_image_dir}
-	zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" .
+	zip_image "${runtime_image_dir}" "${dist_dir}/jdk-runtime.zip" "$SOURCE_DATE_EPOCH"
 	echo "Java Runtime Done"
 )
 

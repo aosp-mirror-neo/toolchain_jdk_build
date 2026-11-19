@@ -71,11 +71,12 @@ function dist_logs() {
 }
 trap dist_logs EXIT
 
+export SOURCE_DATE_EPOCH=$(source_date_epoch $sources_dir)
+
 if [ -f "$dist_dir"/jdk.zip ]; then
 	echo "Re-using existing JDK $dist_dir/jdk.zip"
 else
 	declare -r jbr_tag="$(sed 's/^.*b//' "$sources_dir/build.txt")"
-	export SOURCE_DATE_EPOCH=$(source_date_epoch $sources_dir)
 	unset DISPLAY
 
 	# Target dependencies are from Ubuntu 20.04 arm64
@@ -138,8 +139,17 @@ exec "$clang_bin/$tool" --target=$openjdk_target "\$@"
 EOF
 		chmod +x "$cross_bin/$openjdk_target-$tool"
 
+		# Pass -fuse-ld=lld only when linking. For a compile-only call (-c) clang
+		# warns that the flag is unused, and configure probes BUILD_CC with
+		# -Werror, so every probe would fail. One of those probes decides whether
+		# the build can use compiler path mapping; when it fails, the build falls
+		# back to source-relative paths and -ffile-prefix-map no longer keeps the
+		# out dir out of the debug info.
 		cat >"$cross_bin/host-$tool" <<EOF
 #!/bin/bash
+case " \$* " in
+  *" -c "* | *" -E "* | *" -S "*) exec "$clang_bin/$tool" --sysroot="$host_tools" "\$@" ;;
+esac
 exec "$clang_bin/$tool" --sysroot="$host_tools" -fuse-ld=lld "\$@"
 EOF
 		chmod +x "$cross_bin/host-$tool"
@@ -221,8 +231,8 @@ EOF
 				--with-vulkan \
 				--with-vulkan-include="$vulkan_headers/include" \
 				--with-vulkan-shader-compiler=glslangValidator \
-				--with-extra-cflags="--sysroot=$sysroot" \
-				--with-extra-cxxflags="--sysroot=$sysroot" \
+				--with-extra-cflags="--sysroot=$sysroot -ffile-prefix-map=$out_path/=" \
+				--with-extra-cxxflags="--sysroot=$sysroot -ffile-prefix-map=$out_path/=" \
 				--with-extra-ldflags="--sysroot=$sysroot" \
 				AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CXXFILT=llvm-cxxfilt WAYLAND_SCANNER="$host_tools/usr/bin/wayland-scanner" \
 				BUILD_CC="$cross_bin/host-clang" \
@@ -247,13 +257,10 @@ EOF
 	verifyMaxGlibcSymbolVersion "$build_dir/images/jdk" "$studio_min_glibc_version"
 
 	rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
-	(
-		cd "$build_dir/images/jdk"
-		rm -rf demo
-		rm -rf man
-		zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . -x'*.diz'
-		zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.diz'
-	)
+	rm -rf "$build_dir/images/jdk/demo" "$build_dir/images/jdk/man"
+	normalize_diz_archives "$build_dir/images/jdk" "$SOURCE_DATE_EPOCH"
+	zip_image "$build_dir/images/jdk" "$dist_dir/jdk.zip" "$SOURCE_DATE_EPOCH" -x '*.diz'
+	zip_image "$build_dir/images/jdk" "$dist_dir/jdk-debuginfo.zip" "$SOURCE_DATE_EPOCH" -i '*.diz'
 fi
 
 echo "Creating java runtime ...."
@@ -306,8 +313,7 @@ echo "Creating java runtime ...."
 	grep -v "^JAVA_VERSION" "${jbr_jdk_dir}/release" | grep -v "^MODULES" >>"${runtime_image_dir}/release"
 	cp "${runtime_image_dir}/release" "${dist_dir}"
 
-	cd ${runtime_image_dir}
-	zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" .
+	zip_image "${runtime_image_dir}" "${dist_dir}/jdk-runtime.zip" "$SOURCE_DATE_EPOCH"
 	echo "Java Runtime Done"
 )
 

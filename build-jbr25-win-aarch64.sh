@@ -40,11 +40,12 @@ else
   declare -r native_build=
 fi
 
+export SOURCE_DATE_EPOCH=$(source_date_epoch $sources_dir)
+
 if [ -f "$dist_dir"/jdk.zip ]; then
   echo "Re-using existing JDK $dist_dir/jdk.zip"
 else
   declare -r jbr_tag="$(sed 's/^.*b//' "$sources_dir/build.txt")"
-  export SOURCE_DATE_EPOCH=$(source_date_epoch $sources_dir)
 
   # Configure
   mkdir -p "$build_dir"
@@ -85,19 +86,16 @@ else
   )
 
   rm -rf "$dist_dir"/{jdk.zip,jdk-debuginfo.zip,jdk-runtime.zip,build.log,configure.log}
-  (
-    cd "$build_dir/images/jdk"
-    rm -rf demo
-    rm -rf man
+  rm -rf "$build_dir/images/jdk/demo" "$build_dir/images/jdk/man"
 
-    mkdir -p legal/nvda
-    cp "$top/prebuilts/jdk/studio/nvda/stable/license.txt" ./legal/nvda/LICENSE
+  mkdir -p "$build_dir/images/jdk/legal/nvda"
+  cp "$top/prebuilts/jdk/studio/nvda/stable/license.txt" "$build_dir/images/jdk/legal/nvda/LICENSE"
 
-    verifyWindowsImageCpuArchitecture "$build_dir/images/jdk" "ARM64|Aarch64"
+  verifyWindowsImageCpuArchitecture "$build_dir/images/jdk" "ARM64|Aarch64"
 
-    zip -9rDy${quiet:+q} "$dist_dir"/jdk.zip . -x'*.diz'
-    zip -9rDy${quiet:+q} "$dist_dir"/jdk-debuginfo.zip . -i'*.diz'
-  )
+  normalize_diz_archives "$build_dir/images/jdk" "$SOURCE_DATE_EPOCH"
+  zip_image "$build_dir/images/jdk" "$dist_dir/jdk.zip" "$SOURCE_DATE_EPOCH" -x '*.diz'
+  zip_image "$build_dir/images/jdk" "$dist_dir/jdk-debuginfo.zip" "$SOURCE_DATE_EPOCH" -i '*.diz'
 fi
 
 echo "Creating java runtime ...."
@@ -144,8 +142,7 @@ echo "Creating java runtime ...."
     echo "Skipping TestAwt.java on $(uname -m) build host (cross-compiled target is aarch64)"
   fi
 
-  cd ${runtime_image_dir}
-  zip -9rDy${quiet:+q} "${dist_dir}/jdk-runtime.zip" .
+  zip_image "${runtime_image_dir}" "${dist_dir}/jdk-runtime.zip" "$SOURCE_DATE_EPOCH"
   echo "Java Runtime Done"
 )
 
